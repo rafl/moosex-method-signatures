@@ -79,7 +79,7 @@ sub parse_proto {
         my ($type, $var, $default) = $elem =~ /
             ^
             (?:
-                ([^\s]+)
+                ([^\$]+)
                 \s+
             )?
             \$([^\s]+)
