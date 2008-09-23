@@ -6,7 +6,7 @@ package MooseX::Method::Signatures;
 use Sub::Name;
 use Scope::Guard;
 use Devel::Declare ();
-use MooseX::Params::Validate;
+use MooseX::Meta::Signature::Positional;
 
 our $VERSION = '0.01_01';
 
@@ -89,16 +89,15 @@ sub parse_proto {
             )?$
         /x;
 
-        my $optional = 0;
-        if ($var =~ s/\?$//) {
-            $optional = 1;
+        my $required = 1;
+        if ($var =~ s/\?$// || defined $default) {
+            $required = 0;
         }
 
-        $optional = 1 if defined $default;
-
-        $param_spec .= "${var} => {";
+        #$param_spec .= "${var} => {";
+        $param_spec .= "{";
         $param_spec .= "isa => '${type}'," if defined $type;
-        $param_spec .= "optional => ${optional},";
+        $param_spec .= "required => ${required},";
         $param_spec .= "default => ${default}," if defined $default;
         $param_spec .= "},";
 
@@ -114,7 +113,7 @@ sub make_proto_unwrap {
     my $inject = 'my $self = shift; ';
     if (defined $proto && length $proto) {
         my ($vars, $param_spec) = parse_proto($proto);
-        $inject .= "my (${vars}) = validatep(\\\@_, ${param_spec}); ";
+        $inject .= "my (${vars}) = MooseX::Meta::Signature::Positional->new(${param_spec})->validate(\@_);";
     }
 
     print STDERR $inject, "\n";
@@ -135,7 +134,7 @@ sub inject_if_block {
 }
 
 sub scope_injector_call {
-    return ' BEGIN { MooseX::Method::Signatures::inject_scope }; use MooseX::Params::Validate; ';
+    return ' BEGIN { MooseX::Method::Signatures::inject_scope }; ';
 }
 
 sub parser {
