@@ -297,7 +297,7 @@ signature syntax is supported yet and some of it never will be.
 
     method foo (        $moo) # invocant is called $self and is required
     method bar ($self:  $moo) # same, but explicit
-    method baz ($class: $moo) # invocant is called $self
+    method baz ($class: $moo) # invocant is called $class
 
 =head2 Labels
 
