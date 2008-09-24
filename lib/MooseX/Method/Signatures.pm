@@ -299,6 +299,11 @@ signature syntax is supported yet and some of it never will be.
     method bar ($self:  $moo) # same, but explicit
     method baz ($class: $moo) # invocant is called $self
 
+=head2 Labels
+
+    method foo (:     $affe ) # called as $obj->foo(affe => $value)
+    method bar (:apan($affe)) # called as $obj->foo(apan => $value)
+
 =head2 Complex Example
 
     method foo ( SomeClass $thing where { $_->can('stuff') }:
@@ -312,6 +317,16 @@ signature syntax is supported yet and some of it never will be.
     #      to be even and greater than 10
 
 =head1 BUGS, CAVEATS AND NOTES
+
+=head2 Non-scalar parameters
+
+Currently parameters that aren't scalars are unsupported. This is going to
+change soon.
+
+=head2 Fancy signatures
+
+L<Perl6::Signature> is used to parse the signatures. However, some signatures
+that can be parsed by it aren't supported by this module (yet).
 
 =head2 Debugging
 
