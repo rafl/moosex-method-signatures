@@ -1,0 +1,9 @@
+^\.
+\.bak$
+\.swp$
+^Makefile$
+^Makefile.old$
+^MooseX-Method-Signatures-
+^cover_db\b
+blib\b
+^issues\b
