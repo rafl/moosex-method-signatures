@@ -8,7 +8,7 @@ use Sub::Name;
 use Scope::Guard;
 use Devel::Declare ();
 use Perl6::Signature;
-use MooseX::Meta::Signature::Positional;
+use MooseX::Meta::Signature::Combined;
 
 our $VERSION = '0.01_01';
 
@@ -74,9 +74,9 @@ sub shadow {
 
 sub param_to_spec {
     my ($param, $required) = @_;
-    my $spec = q{};
+    $required ||= 0;
 
-    my $default = $param->p_default;
+    my $spec = q{};
     my $type;
 
     if (my @types = @{ $param->p_types }) {
@@ -88,6 +88,8 @@ sub param_to_spec {
         my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } @{ $constraints };
         $type = "Moose::Util::TypeConstraints::subtype(${type}, sub {${cb}})";
     }
+
+    my $default = $param->p_default;
 
     $spec .= "{";
     $spec .= "required => ${required},";
@@ -125,6 +127,14 @@ sub parse_proto {
         $i++;
     }
 
+    for my $param (@{ $sig->s_namedList }) {
+        $vars .= $param->p_variable . q{,};
+
+        my $label = $param->p_label;
+        my $required = $sig->s_requiredNames->{ $label };
+        $param_spec .= "${label} => " . param_to_spec($param, $required);
+    }
+
     return ($vars, $param_spec);
 }
 
@@ -136,7 +146,7 @@ sub make_proto_unwrap {
     }
 
     my ($vars, $param_spec) = parse_proto($proto);
-    my $inject = "my (${vars}) = MooseX::Meta::Signature::Positional->new(${param_spec})->validate(\@_);";
+    my $inject = "my (${vars}) = MooseX::Meta::Signature::Combined->new(${param_spec})->validate(\@_);";
 
     print STDERR $inject, "\n";
 
