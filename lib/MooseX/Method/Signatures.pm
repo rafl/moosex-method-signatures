@@ -6,6 +6,7 @@ package MooseX::Method::Signatures;
 use Sub::Name;
 use Scope::Guard;
 use Devel::Declare ();
+use Perl6::Signature;
 use MooseX::Meta::Signature::Positional;
 
 our $VERSION = '0.01_01';
@@ -74,34 +75,28 @@ sub parse_proto {
     my ($proto) = @_;
     my ($vars, $param_spec) = (q//) x 2;
 
-    my @elems = split /\s*,\s*/, $proto;
-    for my $elem (@elems) {
-        my ($type, $var, $default) = $elem =~ /
-            ^
-            (?:
-                ([^\$]+)
-                \s+
-            )?
-            \$([^\s]+)
-            (?:
-                \s*=\s*
-                ([^\s]+)
-            )?$
-        /x;
+    my $sig = Perl6::Signature->parse(":(${proto})");
 
-        my $required = 1;
-        if ($var =~ s/\?$// || defined $default) {
-            $required = 0;
+    my $i = 1;
+    for my $param (@{ $sig->s_positionalList }) {
+        $vars .= $param->p_variable . q{,};
+
+        my $required = $i > $sig->s_requiredPositionalCount ? 0 : 1;
+        my $default  = $param->p_default;
+        my $type;
+
+        if (my @types = @{ $param->p_types }) {
+            $type = join '|', @types;
+            $type = qq{'${type}'};
         }
 
-        #$param_spec .= "${var} => {";
         $param_spec .= "{";
-        $param_spec .= "isa => '${type}'," if defined $type;
         $param_spec .= "required => ${required},";
+        $param_spec .= "isa => ${type}," if defined $type;
         $param_spec .= "default => ${default}," if defined $default;
         $param_spec .= "},";
 
-        $vars .= "\$${var},";
+        $i++;
     }
 
     return ($vars, $param_spec);
