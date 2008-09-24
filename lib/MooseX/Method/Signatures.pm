@@ -3,6 +3,7 @@ use warnings;
 
 package MooseX::Method::Signatures;
 
+use Carp qw/croak/;
 use Sub::Name;
 use Scope::Guard;
 use Devel::Declare ();
@@ -76,6 +77,8 @@ sub parse_proto {
     my ($vars, $param_spec) = (q//) x 2;
 
     my $sig = Perl6::Signature->parse(":(${proto})");
+    croak "Invalid method signature (${proto})"
+        unless $sig;
 
     my $i = 1;
     for my $param (@{ $sig->s_positionalList }) {
