@@ -283,7 +283,7 @@ signature syntax is supported yet and some of it never will be.
 
 =for later, when mx::method::signature::combined is fixed
     method baz ($a , $b?, :$c ,  $d?) # combined
-=cut
+=back
 
 =head2 Defaults
 
@@ -299,7 +299,7 @@ signature syntax is supported yet and some of it never will be.
     method bar ($self:  $moo) # same, but explicit
     method baz ($class: $moo) # invocant is called $self
 
-=head2 Complex
+=head2 Complex Example
 
     method foo ( SomeClass $thing where { $_->can('stuff') }:
                  Str  $bar  = "apan"
@@ -311,9 +311,27 @@ signature syntax is supported yet and some of it never will be.
     # $baz is named, required, must be an integer, defaults to 42 and needs
     #      to be even and greater than 10
 
-=head1 LICENSE
+=head1 SEE ALSO
 
-Same as Perl.
+L<Method::Signatures>
+
+L<MooseX::Method>
+
+L<Perl6::Subs>
+
+L<Devel::Declare>
+
+L<Perl6::Signature>
+
+L<Moose>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2008  Florian Ragwitz
+
+Based on the tests for Matt S. Trout's L<Devel::Declare>.
+
+Licensed under the same terms as Perl itself.
 
 =head1 AUTHOR
 
