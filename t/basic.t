@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 13;
+use Test::More tests => 17;
 use Test::Exception;
 
 use FindBin;
@@ -49,4 +49,20 @@ lives_ok(sub {
 
 dies_ok(sub {
     $o->affe('foo');
+});
+
+dies_ok(sub {
+    $o->positional;
+});
+
+dies_ok(sub {
+    $o->positional(optional => 42);
+});
+
+lives_ok(sub {
+    $o->positional(required => 23);
+});
+
+lives_ok(sub {
+    $o->positional(optional => 42, required => 23);
 });
