@@ -101,8 +101,14 @@ sub parse_proto {
     croak "Invalid method signature (${proto})"
         unless $sig;
 
-    $vars       .= '$self,';
-    $param_spec .= '{ required => 1 },';
+    if (my $invocant = $sig->s_invocant) {
+        $vars       .= $invocant->p_variable . q{,};
+        $param_spec .= param_to_spec($invocant, 1);
+    }
+    else {
+        $vars       .= '$self,';
+        $param_spec .= '{ required => 1 },';
+    }
 
     my $i = 1;
     for my $param (@{ $sig->s_positionalList }) {
