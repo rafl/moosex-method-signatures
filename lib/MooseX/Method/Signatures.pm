@@ -84,6 +84,11 @@ sub param_to_spec {
         $type = qq{'${type}'};
     }
 
+    if (my $constraints = $param->p_constraints) {
+        my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } @{ $constraints };
+        $type = "Moose::Util::TypeConstraints::subtype(${type}, sub {${cb}})";
+    }
+
     $spec .= "{";
     $spec .= "required => ${required},";
     $spec .= "isa => ${type}," if defined $type;
