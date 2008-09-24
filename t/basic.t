@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 13;
 use Test::Exception;
 
 use FindBin;
@@ -10,6 +10,18 @@ use TestClass;
 
 dies_ok(sub {
     TestClass->new;
+});
+
+dies_ok(sub {
+    TestClass->new('moo', 23);
+});
+
+dies_ok(sub {
+    TestClass->new('moo', 8);
+});
+
+lives_ok(sub {
+    TestClass->new('moo', 52);
 });
 
 my $o = TestClass->new('foo');
