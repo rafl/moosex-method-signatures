@@ -204,3 +204,119 @@ sub inject_scope {
 }
 
 1;
+
+__END__
+=head1 NAME
+
+MooseX::Method::Signatures - Method declarations with type constraints and no source filter
+
+=head1 SYNOPSIS
+
+    package Foo;
+
+    use MooseX::Method::Signatures;
+
+    method morning (Str $name) {
+        $self->say("Good morning ${name}!");
+    }
+
+    method hello (Str :$who, Int :$age where { $_ > 0 }) {
+        $self->say("Hello ${who}, I am ${age} years old!");
+    }
+
+    method greet (Str $name, Bool :$excited = 0) {
+        if ($excited) {
+            $self->say("GREETINGS ${name}!");
+        }
+        else {
+            $self->say("Hi ${name}!");
+        }
+    }
+
+    $foo->morning('Resi');                          # This works.
+
+    $foo->hello(who => 'world', age => 42);         # This too.
+
+    $foo->greet('Resi', excited => 1);              # And this as well.
+
+    $foo->hello(who => 'world', age => 'fortytwo'); # This doesn't.
+
+    $foo->hello(who => 'world', age => -23);        # This neither.
+
+    $foo->morning;                                  # Won't work.
+
+    $foo->greet;                                    # Will fail.
+
+=head1 DISCLAIMER
+
+This is B<ALPHA SOFTWARE>. Use at your own risk. Features may change.
+
+=head1 DESCRIPTION
+
+Provides a proper method keyword, like "sub" but specificly for making methods
+and validating their arguments against Moose type constraints.
+
+=head1 SIGNATURE SYNTAX
+
+The signature syntax is heavily based on Perl 6. However not the full Perl 6
+signature syntax is supported yet and some of it never will be.
+
+=head2 Type Constraints
+
+    method foo ($affe)        # no type checking
+    method bar (Animal $affe) # $affe->isa('Animal')
+
+=for later, when p6::signatures is fixed
+    method baz (Animal|Human $affe) # $affe->isa('Animal') || $affe->isa('Human')
+=back
+
+=head2 Positional vs. Named
+
+    method foo ( $a,  $b,  $c) # positional
+    method bar (:$a, :$b, :$c) # named
+    method baz ( $a,  $b, :$c) # combined
+
+=head2 Required vs. Optional
+
+    method foo ($a , $b!, :$c!, :$d!) # required
+    method bar ($a?, $b?, :$c , :$d?) # optional
+
+=for later, when mx::method::signature::combined is fixed
+    method baz ($a , $b?, :$c ,  $d?) # combined
+=cut
+
+=head2 Defaults
+
+    method foo ($a = 42) # defaults to 42
+
+=head2 Constraints
+
+    method foo ($foo where { $_ % 2 == 0 }) # only even
+
+=head2 Invocant
+
+    method foo (        $moo) # invocant is called $self and is required
+    method bar ($self:  $moo) # same, but explicit
+    method baz ($class: $moo) # invocant is called $self
+
+=head2 Complex
+
+    method foo ( SomeClass $thing where { $_->can('stuff') }:
+                 Str  $bar  = "apan"
+                 Int :$baz! = 42 where { $_ % 2 == 0 } where { $_ > 10 } )
+
+    # the invocant is called $thing, must be an instance of SomeClass and
+           has to implement a 'stuff' method
+    # $bar is positional, required, must be a string and defaults to "affe"
+    # $baz is named, required, must be an integer, defaults to 42 and needs
+    #      to be even and greater than 10
+
+=head1 LICENSE
+
+Same as Perl.
+
+=head1 AUTHOR
+
+Florian Ragwitz E<lt>rafl@debian.orgE<gt>
+
+=cut
