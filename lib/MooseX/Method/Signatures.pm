@@ -72,6 +72,27 @@ sub shadow {
     Devel::Declare::shadow_sub("${pack}::${Declarator}", $_[0]);
 }
 
+sub param_to_spec {
+    my ($param, $required) = @_;
+    my $spec = q{};
+
+    my $default = $param->p_default;
+    my $type;
+
+    if (my @types = @{ $param->p_types }) {
+        $type = join '|', @types;
+        $type = qq{'${type}'};
+    }
+
+    $spec .= "{";
+    $spec .= "required => ${required},";
+    $spec .= "isa => ${type}," if defined $type;
+    $spec .= "default => ${default}," if defined $default;
+    $spec .= "},";
+
+    return $spec;
+}
+
 sub parse_proto {
     my ($proto) = @_;
     my ($vars, $param_spec) = (q//) x 2;
@@ -80,24 +101,15 @@ sub parse_proto {
     croak "Invalid method signature (${proto})"
         unless $sig;
 
+    $vars       .= '$self,';
+    $param_spec .= '{ required => 1 },';
+
     my $i = 1;
     for my $param (@{ $sig->s_positionalList }) {
         $vars .= $param->p_variable . q{,};
 
         my $required = $i > $sig->s_requiredPositionalCount ? 0 : 1;
-        my $default  = $param->p_default;
-        my $type;
-
-        if (my @types = @{ $param->p_types }) {
-            $type = join '|', @types;
-            $type = qq{'${type}'};
-        }
-
-        $param_spec .= "{";
-        $param_spec .= "required => ${required},";
-        $param_spec .= "isa => ${type}," if defined $type;
-        $param_spec .= "default => ${default}," if defined $default;
-        $param_spec .= "},";
+        $param_spec .= param_to_spec($param, $required);
 
         $i++;
     }
@@ -108,11 +120,12 @@ sub parse_proto {
 sub make_proto_unwrap {
     my ($proto) = @_;
 
-    my $inject = 'my $self = shift; ';
-    if (defined $proto && length $proto) {
-        my ($vars, $param_spec) = parse_proto($proto);
-        $inject .= "my (${vars}) = MooseX::Meta::Signature::Positional->new(${param_spec})->validate(\@_);";
+    if (!defined $proto) {
+        $proto = '';
     }
+
+    my ($vars, $param_spec) = parse_proto($proto);
+    my $inject = "my (${vars}) = MooseX::Meta::Signature::Positional->new(${param_spec})->validate(\@_);";
 
     print STDERR $inject, "\n";
 
