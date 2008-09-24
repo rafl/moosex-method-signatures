@@ -149,8 +149,6 @@ sub make_proto_unwrap {
     my ($vars, $param_spec) = parse_proto($proto);
     my $inject = "my (${vars}) = MooseX::Meta::Signature::Combined->new(${param_spec})->validate(\@_);";
 
-    print STDERR $inject, "\n";
-
     return $inject;
 }
 
