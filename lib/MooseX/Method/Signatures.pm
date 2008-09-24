@@ -8,6 +8,7 @@ use Sub::Name;
 use Scope::Guard;
 use Devel::Declare ();
 use Perl6::Signature;
+use Moose::Util::TypeConstraints ();
 use MooseX::Meta::Signature::Combined;
 
 our $VERSION = '0.01_01';
@@ -130,7 +131,7 @@ sub parse_proto {
     for my $param (@{ $sig->s_namedList }) {
         $vars .= $param->p_variable . q{,};
 
-        my $label = $param->p_label;
+        my $label    = $param->p_label;
         my $required = $sig->s_requiredNames->{ $label };
         $param_spec .= "${label} => " . param_to_spec($param, $required);
     }
