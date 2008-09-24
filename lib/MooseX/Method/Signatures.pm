@@ -311,6 +311,30 @@ signature syntax is supported yet and some of it never will be.
     # $baz is named, required, must be an integer, defaults to 42 and needs
     #      to be even and greater than 10
 
+=head1 BUGS, CAVEATS AND NOTES
+
+=head2 Debugging
+
+This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.
+
+=head2 No source filter
+
+While this module does rely on the hairy black magic of L<Devel::Declare> it
+does not depend on a source filter. As such, it doesn't try to parse and
+rewrite your source code and there should be no weird side effects.
+
+Devel::Declare only effects compilation. After that, it's a normal subroutine.
+As such, for all that hairy magic, this module is surprisnigly stable.
+
+=head2 What about regular subroutines?
+
+L<Devel::Declare> cannot yet change the way C<sub> behaves.
+
+=head2 What about the return value?
+
+Currently there is no support for types or declaring the type of the return
+value.
+
 =head1 SEE ALSO
 
 L<Method::Signatures>
@@ -329,7 +353,9 @@ L<Moose>
 
 Copyright (c) 2008  Florian Ragwitz
 
-Based on the tests for Matt S. Trout's L<Devel::Declare>.
+Code based on the tests for L<Devel::Declare>.
+
+Documentation based on L<MooseX::Method> and L<Method::Signatures>.
 
 Licensed under the same terms as Perl itself.
 
