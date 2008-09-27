@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 19;
+use Test::More tests => 20;
 use Test::Exception;
 
 use FindBin;
@@ -24,8 +24,7 @@ is($o->{bar}, 23);
 
 dies_ok(sub { $o->set_bar('bar') });
 
-# p6::signatures bug
-#lives_ok(sub { $o->affe({ foo => 1 }) });
+lives_ok(sub { $o->affe({ foo => 1 }) });
 lives_ok(sub { $o->affe([qw/a b c/]) });
 dies_ok(sub { $o->affe('foo') });
 

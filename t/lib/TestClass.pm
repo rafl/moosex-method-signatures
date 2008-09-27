@@ -22,9 +22,7 @@ method set_bar (Int $bar) {
     $self->{bar} = $bar;
 }
 
-# p6::signatures bug
-#method affe (ArrayRef | HashRef $zomtec) {
-method affe (ArrayRef $zomtec) {
+method affe (ArrayRef | HashRef $zomtec) {
     $self->{baz} = $zomtec;
 }
 
