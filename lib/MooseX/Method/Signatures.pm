@@ -343,6 +343,16 @@ rewrite your source code and there should be no weird side effects.
 Devel::Declare only effects compilation. After that, it's a normal subroutine.
 As such, for all that hairy magic, this module is surprisnigly stable.
 
+=head2 Attributes
+
+Specifying attributes for methods works just like for normal subs:
+
+    method foo ($a, $b) : Attribute Another(Attribute) { ... }
+
+However, this currently won't work if the C<:> starting the list of attributes
+and the C<{> starting the code block aren't on the same line. Also the
+attributes may not contain C<{>.
+
 =head2 What about regular subroutines?
 
 L<Devel::Declare> cannot yet change the way C<sub> behaves.
