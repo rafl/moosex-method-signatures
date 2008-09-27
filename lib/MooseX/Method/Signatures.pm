@@ -157,9 +157,11 @@ sub inject_if_block {
 
     skipspace;
 
-    my $linestr = Devel::Declare::get_linestr;
-    if (substr($linestr, $Offset, 1) eq '{') {
-        substr($linestr, $Offset+1, 0) = $inject;
+    my $linestr     = Devel::Declare::get_linestr;
+    my $block_start = index $linestr, '{', $Offset;
+    if ($block_start >= $Offset) {
+        substr($linestr, $block_start + 1, 0) = $inject;
+        substr($linestr, $Offset, 0) = 'sub';
         Devel::Declare::set_linestr($linestr);
     }
 }
