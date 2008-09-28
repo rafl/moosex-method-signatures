@@ -17,10 +17,14 @@ sub MODIFY_CODE_ATTRIBUTES {
     return ();
 }
 
-#TODO: doesn't work when : and the start of the block aren't on the same line yet
+method moo ($a, $b) : Bar Baz(fubar) {
+}
 
-method foo ($a, $b) : Bar Baz(fubar) {
-};
+method foo
+:
+Bar
+Baz(fu{bar)
+{ }
 
 ok($cb_called, 'attribute handler got called');
-is_deeply($attrs, [qw/Bar Baz(fubar)/], '... with the right attributes');
+is_deeply($attrs, [qw/Bar Baz(fu{bar)/], '... with the right attributes');
