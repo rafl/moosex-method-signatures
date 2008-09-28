@@ -161,12 +161,14 @@ sub inject_if_block {
     my $attrs   = '';
 
     if (substr($linestr, $Offset, 1) eq ':') {
-        substr($linestr, $Offset, 1) = '';
-        Devel::Declare::set_linestr($linestr);
-
-        $attrs = ':';
-
         while (substr($linestr, $Offset, 1) ne '{') {
+            if (substr($linestr, $Offset, 1) eq ':') {
+                substr($linestr, $Offset, 1) = '';
+                Devel::Declare::set_linestr($linestr);
+
+                $attrs .= ' :';
+            }
+
             skipspace;
             $linestr = Devel::Declare::get_linestr();
 
@@ -176,22 +178,23 @@ sub inject_if_block {
                 Devel::Declare::set_linestr($linestr);
 
                 $attrs .= " ${name}";
-            }
 
-            if (substr($linestr, $Offset, 1) eq '(') {
-                my $length = Devel::Declare::toke_scan_str($Offset);
-                my $arg    = Devel::Declare::get_lex_stuff();
-                Devel::Declare::clear_lex_stuff();
-                $linestr = Devel::Declare::get_linestr();
-                substr($linestr, $Offset, $length) = '';
-                Devel::Declare::set_linestr($linestr);
+                if (substr($linestr, $Offset, 1) eq '(') {
+                    my $length = Devel::Declare::toke_scan_str($Offset);
+                    my $arg    = Devel::Declare::get_lex_stuff();
+                    Devel::Declare::clear_lex_stuff();
+                    $linestr = Devel::Declare::get_linestr();
+                    substr($linestr, $Offset, $length) = '';
+                    Devel::Declare::set_linestr($linestr);
 
-                $attrs .= "(${arg})";
+                    $attrs .= "(${arg})";
+                }
             }
         }
+
+        $linestr = Devel::Declare::get_linestr();
     }
 
-    $linestr = Devel::Declare::get_linestr();
     if (substr($linestr, $Offset, 1) eq '{') {
         substr($linestr, $Offset + 1, 0) = $inject;
         substr($linestr, $Offset, 0) = "sub ${attrs}";
