@@ -1,3 +1,8 @@
+0.04  Thu, 02 Oct 2008 01:07:00 +0200
+  * Depend on Perl6::Signature 0.03.
+    This is the first version to implement Foo|Bar $x correctly.
+  * Minor documentation improvement.
+
 0.03  Sun, 28 Sep 2008 13:37:39 +0200
   * Support attributes.
   * Fixed documentation typo.
