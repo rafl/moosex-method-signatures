@@ -301,12 +301,9 @@ signature syntax is supported yet and some of it never will be.
 
 =head2 Type Constraints
 
-    method foo ($affe)        # no type checking
-    method bar (Animal $affe) # $affe->isa('Animal')
-
-=for later, when p6::signatures is fixed
+    method foo (             $affe) # no type checking
+    method bar (Animal       $affe) # $affe->isa('Animal')
     method baz (Animal|Human $affe) # $affe->isa('Animal') || $affe->isa('Human')
-=back
 
 =head2 Positional vs. Named
 
