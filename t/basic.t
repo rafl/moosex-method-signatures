@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 20;
+use Test::More tests => 25;
 use Test::Exception;
 
 use FindBin;
@@ -24,18 +24,46 @@ is($o->{bar}, 23);
 
 dies_ok(sub { $o->set_bar('bar') });
 
-lives_ok(sub { $o->affe({ foo => 1 }) });
-lives_ok(sub { $o->affe([qw/a b c/]) });
+{
+    my $test_hash = { foo => 1 };
+    lives_ok(sub { $o->affe($test_hash) });
+    is_deeply($o->{baz}, $test_hash);
+}
+
+{
+    my $test_array = [qw/a b c/];
+    lives_ok(sub { $o->affe($test_array) });
+    is_deeply($o->{baz}, $test_array);
+}
+
 dies_ok(sub { $o->affe('foo') });
 
 dies_ok(sub { $o->named });
 dies_ok(sub { $o->named(optional => 42) });
-lives_ok(sub { $o->named(required => 23) });
-lives_ok(sub { $o->named(optional => 42, required => 23) });
+
+lives_ok(sub {
+    is_deeply(
+        [$o->named(required => 23)],
+        [undef, 23],
+    );
+});
+
+lives_ok(sub {
+    is_deeply(
+        [$o->named(optional => 42, required => 23)],
+        [42, 23],
+    );
+});
 
 dies_ok(sub { $o->combined(1, 2) });
 dies_ok(sub { $o->combined(1, required => 2) });
-lives_ok(sub { $o->combined(1, 2, 3, required => 4, optional => 5) });
+
+lives_ok(sub {
+    is_deeply(
+        [$o->combined(1, 2, 3, required => 4, optional => 5)],
+        [1, 2, 3, 5, 4],
+    );
+});
 
 # MooseX::Meta::Signature::Combined bug? optional positional can't be omitted
 #lives_ok(sub { $o->combined(1, 2, required => 3) });
