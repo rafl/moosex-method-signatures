@@ -1,3 +1,7 @@
+0.05  Sun, 12 Oct 2008 03:49:03 +0200
+  * Depend on Devel::Declare 0.002000.
+  * Make named arguments work as expected and add more tests.
+
 0.04  Thu, 02 Oct 2008 01:07:00 +0200
   * Depend on Perl6::Signature 0.03.
     This is the first version to implement Foo|Bar $x correctly.

@@ -11,7 +11,7 @@ use Perl6::Signature;
 use Moose::Util::TypeConstraints ();
 use MooseX::Meta::Signature::Combined;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 our ($Declarator, $Offset);
 
