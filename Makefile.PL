@@ -7,8 +7,8 @@ all_from 'lib/MooseX/Method/Signatures.pm';
 
 requires 'Sub::Name';
 requires 'Scope::Guard';
-requires 'Devel::Declare';
 requires 'Perl6::Signature' => '0.03';
+requires 'Devel::Declare' => '0.002000';
 requires 'Moose::Util::TypeConstraints';
 requires 'MooseX::Meta::Signature::Combined';
 
