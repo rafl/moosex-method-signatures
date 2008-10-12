@@ -28,10 +28,10 @@ lives_ok(sub { $o->affe({ foo => 1 }) });
 lives_ok(sub { $o->affe([qw/a b c/]) });
 dies_ok(sub { $o->affe('foo') });
 
-dies_ok(sub { $o->positional });
-dies_ok(sub { $o->positional(optional => 42) });
-lives_ok(sub { $o->positional(required => 23) });
-lives_ok(sub { $o->positional(optional => 42, required => 23) });
+dies_ok(sub { $o->named });
+dies_ok(sub { $o->named(optional => 42) });
+lives_ok(sub { $o->named(required => 23) });
+lives_ok(sub { $o->named(optional => 42, required => 23) });
 
 dies_ok(sub { $o->combined(1, 2) });
 dies_ok(sub { $o->combined(1, required => 2) });

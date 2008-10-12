@@ -26,7 +26,7 @@ method affe (ArrayRef | HashRef $zomtec) {
     $self->{baz} = $zomtec;
 }
 
-method positional (:$optional, :$required!) {
+method named (:$optional, :$required!) {
     return ($optional, $required);
 }
 
