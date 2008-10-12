@@ -147,7 +147,7 @@ sub make_proto_unwrap {
     }
 
     my ($vars, $param_spec) = parse_proto($proto);
-    my $inject = "my (${vars}) = MooseX::Meta::Signature::Combined->new(${param_spec})->validate(\@_);";
+    my $inject = "my (${vars}) = MooseX::Method::Signatures::validate(\\\@_, ${param_spec});";
 
     return $inject;
 }
@@ -239,6 +239,17 @@ sub inject_scope {
         substr($linestr, $offset, 0) = ';';
         Devel::Declare::set_linestr($linestr);
     });
+}
+
+sub validate {
+    my ($args, @param_spec) = @_;
+
+    my @named = grep { !ref $_ } @param_spec;
+    my @ret = MooseX::Meta::Signature::Combined->new(@param_spec)->validate(@{ $args });
+    return @ret unless @named;
+
+    my $named_vals = pop @ret;
+    return (@ret, map { $named_vals->{$_} } @named);
 }
 
 1;
