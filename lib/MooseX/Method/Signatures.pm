@@ -4,7 +4,6 @@ use warnings;
 package MooseX::Method::Signatures;
 
 use Carp qw/croak/;
-use Sub::Name;
 use Scope::Guard;
 use Devel::Declare ();
 use Perl6::Signature;
