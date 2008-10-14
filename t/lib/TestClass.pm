@@ -3,6 +3,7 @@ use warnings;
 
 package TestClass;
 
+use Moose;
 use MooseX::Method::Signatures;
 
 method new ($class: Str $foo, Int $bar = 42
@@ -33,5 +34,7 @@ method named (:$optional, :$required!) {
 method combined ($a, $b, $c?, :$optional, :$required!) {
     return ($a, $b, $c, $optional, $required);
 }
+
+no Moose;
 
 1;

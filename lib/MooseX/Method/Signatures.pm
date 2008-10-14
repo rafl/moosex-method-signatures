@@ -221,13 +221,41 @@ sub parser {
 
     inject_if_block($inject);
 
-    if (defined $name) {
-        $name = join('::', Devel::Declare::get_curstash_name(), $name)
-            unless ($name =~ /::/);
-        shadow(sub (&) { no strict 'refs'; *{$name} = subname $name => shift; });
+    my $pkg;
+    my $meth_name = defined $name
+        ? $name
+        : '__ANON__';
+
+    if ($meth_name =~ /::/) {
+        ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/;
     }
     else {
-        shadow(sub (&) { shift });
+        $pkg = Devel::Declare::get_curstash_name();
+    }
+
+    my $meta = Moose::Meta::Class->initialize($pkg);
+
+    my $create_meta_method = sub {
+        my ($code) = @_;
+        return Moose::Meta::Method->wrap(
+            body         => $code,
+            package_name => $pkg,
+            name         => $meth_name,
+        );
+    };
+
+    if (defined $name) {
+        shadow(sub (&) {
+            my ($code) = @_;
+            my $meth = $create_meta_method->($code);
+            $meta->add_method($meth_name => $meth);
+            return;
+        });
+    }
+    else {
+        shadow(sub (&) {
+            return $create_meta_method->(shift);
+        });
     }
 }
 
