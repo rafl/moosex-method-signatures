@@ -239,8 +239,6 @@ sub parser {
         $pkg = Devel::Declare::get_curstash_name();
     }
 
-    my $meta = Moose::Meta::Class->initialize($pkg);
-
     my $create_meta_method = sub {
         my ($code) = @_;
         return Moose::Meta::Method->wrap(
@@ -254,6 +252,7 @@ sub parser {
         shadow(sub (&) {
             my ($code) = @_;
             my $meth = $create_meta_method->($code);
+            my $meta = Moose::Meta::Class->initialize($pkg);
             $meta->add_method($meth_name => $meth);
             return;
         });
