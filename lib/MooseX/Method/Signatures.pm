@@ -7,6 +7,8 @@ use Carp qw/croak/;
 use Scope::Guard;
 use Devel::Declare ();
 use Perl6::Signature;
+use Moose::Meta::Class;
+use Moose::Meta::Method;
 use Moose::Util::TypeConstraints ();
 use MooseX::Meta::Signature::Combined;
 
