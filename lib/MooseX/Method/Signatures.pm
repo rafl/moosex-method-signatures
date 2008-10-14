@@ -16,16 +16,22 @@ our $VERSION = '0.05';
 our ($Declarator, $Offset);
 
 sub import {
+    my ($self) = @_;
     my $caller = caller();
+    $self->setup_for($caller);
+}
+
+sub setup_for {
+    my ($self, $pkg) = @_;
 
     Devel::Declare->setup_for(
-        $caller,
+        $pkg,
         { method => { const => \&parser } },
     );
 
     {
         no strict 'refs';
-        *{$caller.'::method'} = sub (&) {};
+        *{$pkg.'::method'} = sub (&) {};
     }
 }
 
