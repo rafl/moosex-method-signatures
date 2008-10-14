@@ -1,3 +1,8 @@
+0.06  Tue, 14 Oct 2008 05:43:35 +0200
+  * Use Moose meta methods instead of just coderefs.
+  * Add a setup_for method to set up the method keyword for something different
+    than the caller().
+
 0.05  Sun, 12 Oct 2008 03:49:03 +0200
   * Depend on Devel::Declare 0.002000.
   * Make named arguments work as expected and add more tests.
