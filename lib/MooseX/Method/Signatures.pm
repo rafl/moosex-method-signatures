@@ -430,6 +430,17 @@ L<Devel::Declare> cannot yet change the way C<sub> behaves.
 Currently there is no support for types or declaring the type of the return
 value.
 
+=head2 Interaction with L<Moose::Role>
+
+When composing a L<Moose::Role> into a class that uses
+L<MooseX::Method::Signatures>, you may get a "Subroutine redefined"
+warning. This happens when both the role and the class define a
+method/subroutine of the same name. (The way roles work, the one
+defined in the class takes precedence) To eliminate this warning,
+make sure that your C<with> declaration happens after any
+method/subroutine declarations that may have the same name as a
+method/subroutine within a role.
+
 =head1 SEE ALSO
 
 L<Method::Signatures>
