@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 26;
 use Test::Exception;
 
 use FindBin;
@@ -68,3 +68,8 @@ lives_ok(sub {
 # MooseX::Meta::Signature::Combined bug? optional positional can't be omitted
 #lives_ok(sub { $o->combined(1, 2, required => 3) });
 #lives_ok(sub { $o->combined(1, 2, required => 3, optional => 4) });
+
+use MooseX::Method::Signatures;
+
+my $anon = method ($foo, $bar) { };
+isa_ok($anon, 'Moose::Meta::Method');
