@@ -4,11 +4,11 @@ use warnings;
 package MooseX::Method::Signatures;
 
 use Carp qw/croak/;
-use Scope::Guard;
 use Devel::Declare ();
 use Perl6::Signature;
 use Moose::Meta::Class;
 use Moose::Meta::Method;
+use B::Hooks::EndOfScope;
 use Moose::Util::TypeConstraints ();
 use MooseX::Meta::Signature::Combined;
 
@@ -266,13 +266,12 @@ sub parser {
 }
 
 sub inject_scope {
-    $^H |= 0x120000;
-    $^H{DD_METHODHANDLERS} = Scope::Guard->new(sub {
+    on_scope_end {
         my $linestr = Devel::Declare::get_linestr;
         my $offset  = Devel::Declare::get_linestr_offset;
         substr($linestr, $offset, 0) = ';';
         Devel::Declare::set_linestr($linestr);
-    });
+    };
 }
 
 sub validate {

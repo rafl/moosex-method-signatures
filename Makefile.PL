@@ -5,7 +5,7 @@ use inc::Module::Install;
 name 'MooseX-Method-Signatures';
 all_from 'lib/MooseX/Method/Signatures.pm';
 
-requires 'Scope::Guard';
+requires 'B::Hooks::EndOfScope';
 requires 'Perl6::Signature' => '0.03';
 requires 'Devel::Declare' => '0.002000';
 requires 'Moose::Util::TypeConstraints';
