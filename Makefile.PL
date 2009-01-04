@@ -6,7 +6,7 @@ name 'MooseX-Method-Signatures';
 all_from 'lib/MooseX/Method/Signatures.pm';
 
 requires 'B::Hooks::EndOfScope';
-requires 'Perl6::Signature' => '0.03';
+requires 'Parse::Method::Signatures';
 requires 'Devel::Declare' => '0.002000';
 requires 'Moose::Util::TypeConstraints';
 requires 'MooseX::Meta::Signature::Combined';

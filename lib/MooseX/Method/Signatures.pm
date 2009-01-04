@@ -5,7 +5,7 @@ package MooseX::Method::Signatures;
 
 use Carp qw/croak/;
 use Devel::Declare ();
-use Perl6::Signature;
+use Parse::Method::Signatures;
 use Moose::Meta::Class;
 use Moose::Meta::Method;
 use B::Hooks::EndOfScope;
@@ -81,28 +81,27 @@ sub shadow {
 }
 
 sub param_to_spec {
-    my ($param, $required) = @_;
-    $required ||= 0;
+    my ($param) = @_;
 
     my $spec = q{};
     my $type;
 
-    if (my @types = @{ $param->p_types }) {
-        $type = join '|', @types;
+    if ($param->has_type_constraints) {
+        $type = join '|', $param->type_constraints;
         $type = qq{'${type}'};
     }
 
-    if (my $constraints = $param->p_constraints) {
-        my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } @{ $constraints };
+    if ($param->has_constraints) {
+        my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
         $type = "Moose::Util::TypeConstraints::subtype(${type}, sub {${cb}})";
     }
 
-    my $default = $param->p_default;
+    my $required = $param->required ? 1 : 0;
 
     $spec .= "{";
     $spec .= "required => ${required},";
     $spec .= "isa => ${type}," if defined $type;
-    $spec .= "default => ${default}," if defined $default;
+    $spec .= "default => ${\$param->default_value}," if $param->has_default_value;
     $spec .= "},";
 
     return $spec;
@@ -112,35 +111,34 @@ sub parse_proto {
     my ($proto) = @_;
     my ($vars, $param_spec) = (q//) x 2;
 
-    my $sig = Perl6::Signature->parse(":(${proto})");
+    my $sig = Parse::Method::Signatures->signature("(${proto})");
     croak "Invalid method signature (${proto})"
         unless $sig;
 
-    if (my $invocant = $sig->s_invocant) {
-        $vars       .= $invocant->p_variable . q{,};
-        $param_spec .= param_to_spec($invocant, 1);
+    if ($sig->has_invocant) {
+        my $invocant = $sig->invocant;
+        $vars       .= $invocant->variable_name . q{,};
+        $param_spec .= param_to_spec($invocant);
     }
     else {
         $vars       .= '$self,';
         $param_spec .= '{ required => 1 },';
     }
 
-    my $i = 1;
-    for my $param (@{ $sig->s_positionalList }) {
-        $vars .= $param->p_variable . q{,};
-
-        my $required = $i > $sig->s_requiredPositionalCount ? 0 : 1;
-        $param_spec .= param_to_spec($param, $required);
-
-        $i++;
+    if ($sig->has_positional_params) {
+        for my $param ($sig->positional_params) {
+            $vars .= $param->variable_name . q{,};
+            $param_spec .= param_to_spec($param);
+        }
     }
 
-    for my $param (@{ $sig->s_namedList }) {
-        $vars .= $param->p_variable . q{,};
+    if ($sig->has_named_params) {
+        for my $param ($sig->named_params) {
+            $vars .= $param->variable_name . q{,};
 
-        my $label    = $param->p_label;
-        my $required = $sig->s_requiredNames->{ $label };
-        $param_spec .= "${label} => " . param_to_spec($param, $required);
+            my $label    = $param->label;
+            $param_spec .= "${label} => " . param_to_spec($param);
+        }
     }
 
     return ($vars, $param_spec);
@@ -404,8 +402,8 @@ change soon.
 
 =head2 Fancy signatures
 
-L<Perl6::Signature> is used to parse the signatures. However, some signatures
-that can be parsed by it aren't supported by this module (yet).
+L<Parse::Method::Signatures> is used to parse the signatures. However, some
+signatures that can be parsed by it aren't supported by this module (yet).
 
 =head2 Debugging
 
@@ -450,7 +448,7 @@ L<Perl6::Subs>
 
 L<Devel::Declare>
 
-L<Perl6::Signature>
+L<Parse::Method::Signatures>
 
 L<Moose>
 
