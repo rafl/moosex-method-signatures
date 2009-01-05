@@ -22,8 +22,5 @@ use Test::Exception;
     method foo (CustomType $bar) { }
 }
 
-TODO: {
-    local $TODO = 'exported types not supported yet';
-    lives_ok(sub { TestClass->foo('42') });
-    dies_ok(sub { TestClass->foo('bar') });
-}
+lives_ok(sub { TestClass->foo('42') });
+dies_ok(sub { TestClass->foo('bar') });

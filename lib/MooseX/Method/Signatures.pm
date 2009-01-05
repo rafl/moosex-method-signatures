@@ -54,23 +54,31 @@ sub param_to_spec {
     my ($self, $param) = @_;
 
     my $spec = q{};
-    my $type;
+    my $tc;
 
     if ($param->has_type_constraints) {
-        $type = join '|', $param->type_constraints;
-        $type = qq{'${type}'};
+        $tc = join '|', $param->type_constraints;
+
+        for my $type ($param->type_constraints) {
+            my $meta = Moose::Meta::Class->initialize($self->target);
+            my $pkg = (Class::MOP::get_code_info($meta->get_package_symbol('&'.$type)))[0];
+            if (!$pkg || $pkg ne 'MooseX::Types') {
+                $tc = qq{'${tc}'};
+                last;
+            }
+        }
     }
 
     if ($param->has_constraints) {
         my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
-        $type = "Moose::Util::TypeConstraints::subtype(${type}, sub {${cb}})";
+        $tc = "Moose::Util::TypeConstraints::subtype(${tc}, sub {${cb}})";
     }
 
     my $required = $param->required ? 1 : 0;
 
     $spec .= "{";
     $spec .= "required => ${required},";
-    $spec .= "isa => ${type}," if defined $type;
+    $spec .= "isa => ${tc}," if defined $tc;
     $spec .= "default => ${\$param->default_value}," if $param->has_default_value;
     $spec .= "},";
 
