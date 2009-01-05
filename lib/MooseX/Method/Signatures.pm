@@ -3,85 +3,55 @@ use warnings;
 
 package MooseX::Method::Signatures;
 
+use Moose;
 use Carp qw/croak/;
 use Devel::Declare ();
 use Parse::Method::Signatures;
 use Moose::Meta::Class;
 use Moose::Meta::Method;
-use B::Hooks::EndOfScope;
 use Moose::Util::TypeConstraints ();
 use MooseX::Meta::Signature::Combined;
+use MooseX::Types::Moose qw/Str/;
+
+use namespace::clean -except => 'meta';
 
 our $VERSION = '0.06';
 
-our ($Declarator, $Offset);
+extends qw/Moose::Object Devel::Declare::MethodInstaller::Simple/;
+
+has target => (
+    is       => 'ro',
+    isa      => Str,
+    init_arg => 'into',
+    required => 1,
+);
+
+has keyword => (
+    is       => 'ro',
+    isa      => Str,
+    init_arg => 'name',
+    required => 1,
+);
 
 sub import {
-    my ($self) = @_;
+    my ($class) = @_;
     my $caller = caller();
-    $self->setup_for($caller);
+    $class->setup_for($caller);
 }
 
 sub setup_for {
-    my ($self, $pkg) = @_;
+    my ($class, $pkg) = @_;
 
-    Devel::Declare->setup_for(
-        $pkg,
-        { method => { const => \&parser } },
+    $class->install_methodhandler(
+        into => $pkg,
+        name => 'method',
     );
 
-    {
-        no strict 'refs';
-        *{$pkg.'::method'} = sub (&) {};
-    }
-}
-
-sub skip_declarator {
-    $Offset += Devel::Declare::toke_move_past_token($Offset);
-}
-
-sub skipspace {
-    $Offset += Devel::Declare::toke_skipspace($Offset);
-}
-
-sub strip_name {
-    skipspace;
-
-    if (my $len = Devel::Declare::toke_scan_word($Offset, 1)) {
-        my $linestr = Devel::Declare::get_linestr();
-        my $name    = substr($linestr, $Offset, $len);
-        substr($linestr, $Offset, $len) = '';
-        Devel::Declare::set_linestr($linestr);
-        return $name;
-    }
-
     return;
-}
-
-sub strip_proto {
-    skipspace;
-
-    my $linestr = Devel::Declare::get_linestr();
-    if (substr($linestr, $Offset, 1) eq '(') {
-        my $length = Devel::Declare::toke_scan_str($Offset);
-        my $proto  = Devel::Declare::get_lex_stuff();
-        Devel::Declare::clear_lex_stuff();
-        $linestr = Devel::Declare::get_linestr();
-        substr($linestr, $Offset, $length) = '';
-        Devel::Declare::set_linestr($linestr);
-        return $proto;
-    }
-
-    return;
-}
-
-sub shadow {
-    my $pack = Devel::Declare::get_curstash_name;
-    Devel::Declare::shadow_sub("${pack}::${Declarator}", $_[0]);
 }
 
 sub param_to_spec {
-    my ($param) = @_;
+    my ($self, $param) = @_;
 
     my $spec = q{};
     my $type;
@@ -108,7 +78,8 @@ sub param_to_spec {
 }
 
 sub parse_proto {
-    my ($proto) = @_;
+    my ($self, $proto) = @_;
+    $proto ||= '';
     my ($vars, $param_spec) = (q//) x 2;
 
     my $sig = Parse::Method::Signatures->signature("(${proto})");
@@ -118,7 +89,7 @@ sub parse_proto {
     if ($sig->has_invocant) {
         my $invocant = $sig->invocant;
         $vars       .= $invocant->variable_name . q{,};
-        $param_spec .= param_to_spec($invocant);
+        $param_spec .= $self->param_to_spec($invocant);
     }
     else {
         $vars       .= '$self,';
@@ -128,7 +99,7 @@ sub parse_proto {
     if ($sig->has_positional_params) {
         for my $param ($sig->positional_params) {
             $vars .= $param->variable_name . q{,};
-            $param_spec .= param_to_spec($param);
+            $param_spec .= $self->param_to_spec($param);
         }
     }
 
@@ -137,94 +108,20 @@ sub parse_proto {
             $vars .= $param->variable_name . q{,};
 
             my $label    = $param->label;
-            $param_spec .= "${label} => " . param_to_spec($param);
+            $param_spec .= "${label} => " . $self->param_to_spec($param);
         }
     }
 
     return ($vars, $param_spec);
 }
 
-sub make_proto_unwrap {
-    my ($proto) = @_;
-
-    if (!defined $proto) {
-        $proto = '';
-    }
-
-    my ($vars, $param_spec) = parse_proto($proto);
-    my $inject = "my (${vars}) = MooseX::Method::Signatures::validate(\\\@_, ${param_spec});";
-
-    return $inject;
+sub inject_parsed_proto {
+    my ($self, $vars, $param_spec) = @_;
+    return "my (${vars}) = MooseX::Method::Signatures::validate(\\\@_, ${param_spec});";
 }
 
-sub inject_if_block {
-    my $inject = shift;
-
-    skipspace;
-
-    my $linestr = Devel::Declare::get_linestr;
-    my $attrs   = '';
-
-    if (substr($linestr, $Offset, 1) eq ':') {
-        while (substr($linestr, $Offset, 1) ne '{') {
-            if (substr($linestr, $Offset, 1) eq ':') {
-                substr($linestr, $Offset, 1) = '';
-                Devel::Declare::set_linestr($linestr);
-
-                $attrs .= ' :';
-            }
-
-            skipspace;
-            $linestr = Devel::Declare::get_linestr();
-
-            if (my $len = Devel::Declare::toke_scan_word($Offset, 0)) {
-                my $name = substr($linestr, $Offset, $len);
-                substr($linestr, $Offset, $len) = '';
-                Devel::Declare::set_linestr($linestr);
-
-                $attrs .= " ${name}";
-
-                if (substr($linestr, $Offset, 1) eq '(') {
-                    my $length = Devel::Declare::toke_scan_str($Offset);
-                    my $arg    = Devel::Declare::get_lex_stuff();
-                    Devel::Declare::clear_lex_stuff();
-                    $linestr = Devel::Declare::get_linestr();
-                    substr($linestr, $Offset, $length) = '';
-                    Devel::Declare::set_linestr($linestr);
-
-                    $attrs .= "(${arg})";
-                }
-            }
-        }
-
-        $linestr = Devel::Declare::get_linestr();
-    }
-
-    if (substr($linestr, $Offset, 1) eq '{') {
-        substr($linestr, $Offset + 1, 0) = $inject;
-        substr($linestr, $Offset, 0) = "sub ${attrs}";
-        Devel::Declare::set_linestr($linestr);
-    }
-}
-
-sub scope_injector_call {
-    return ' BEGIN { MooseX::Method::Signatures::inject_scope }; ';
-}
-
-sub parser {
-    local ($Declarator, $Offset) = @_;
-
-    skip_declarator;
-
-    my $name   = strip_name;
-    my $proto  = strip_proto;
-    my $inject = make_proto_unwrap($proto);
-
-    if (defined $name) {
-        $inject = scope_injector_call().$inject;
-    }
-
-    inject_if_block($inject);
+sub code_for {
+    my ($self, $name) = @_;
 
     my $pkg;
     my $meth_name = defined $name
@@ -235,7 +132,7 @@ sub parser {
         ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/;
     }
     else {
-        $pkg = Devel::Declare::get_curstash_name();
+        $pkg = $self->get_curstash_name;
     }
 
     my $create_meta_method = sub {
@@ -248,28 +145,19 @@ sub parser {
     };
 
     if (defined $name) {
-        shadow(sub (&) {
+        return sub (&) {
             my ($code) = @_;
             my $meth = $create_meta_method->($code);
             my $meta = Moose::Meta::Class->initialize($pkg);
             $meta->add_method($meth_name => $meth);
             return;
-        });
+        };
     }
     else {
-        shadow(sub (&) {
+        return sub (&) {
             return $create_meta_method->(shift);
-        });
+        };
     }
-}
-
-sub inject_scope {
-    on_scope_end {
-        my $linestr = Devel::Declare::get_linestr;
-        my $offset  = Devel::Declare::get_linestr_offset;
-        substr($linestr, $offset, 0) = ';';
-        Devel::Declare::set_linestr($linestr);
-    };
 }
 
 sub validate {
@@ -282,6 +170,8 @@ sub validate {
     my $named_vals = pop @ret;
     return (@ret, map { $named_vals->{$_} } @named);
 }
+
+__PACKAGE__->meta->make_immutable;
 
 1;
 
