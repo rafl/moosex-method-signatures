@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 2;
+use Test::More tests => 4;
 use Test::Exception;
 
 {
@@ -18,9 +18,18 @@ use Test::Exception;
     package TestClass;
     use MooseX::Method::Signatures;
     BEGIN { MyTypes->import('CustomType') };
+    use MooseX::Types::Moose qw/ArrayRef/;
 
     method foo (CustomType $bar) { }
+
+    method bar (ArrayRef[CustomType] $baz) { }
 }
 
 lives_ok(sub { TestClass->foo('42') });
 dies_ok(sub { TestClass->foo('bar') });
+
+TODO: {
+    local $TODO = 'parameterized MX::Types not supported yet';
+    lives_ok(sub { TestClass->bar(['42', '23']) });
+    dies_ok(sub { TestClass->bar(['foo', 'bar']) });
+}
