@@ -9,9 +9,11 @@ use Test::Exception;
     use Moose::Util::TypeConstraints;
     use MooseX::Types -declare => [qw/CustomType/];
 
-    subtype CustomType,
-        as Str,
-        where { length($_) == 2 };
+    BEGIN {
+        subtype CustomType,
+            as Str,
+            where { length($_) == 2 };
+    }
 }
 
 {
