@@ -8,10 +8,10 @@ use Carp qw/croak/;
 use Devel::Declare ();
 use Parse::Method::Signatures;
 use Moose::Meta::Class;
-use Moose::Meta::Method;
-use Moose::Util::TypeConstraints ();
+use Moose::Util::TypeConstraints;
 use MooseX::Meta::Signature::Combined;
 use MooseX::Types::Moose qw/Str/;
+use MooseX::Method::Signatures::Meta::Method;
 
 use namespace::clean -except => 'meta';
 
@@ -46,42 +46,43 @@ sub setup_for {
 sub param_to_spec {
     my ($self, $param) = @_;
 
-    my $spec = q{};
     my $tc;
 
     if ($param->has_type_constraints) {
-        $tc = join '|', $param->type_constraints;
+        my @tcs = map {
+            my $code = $self->target->can($_);
+            $code ? eval { $code->() } : Moose::Util::TypeConstraints::find_or_parse_type_constraint($_)
+        } $param->type_constraints;
 
-        for my $type ($param->type_constraints) {
-            my $meta = Moose::Meta::Class->initialize($self->target);
-            my $pkg = (Class::MOP::get_code_info($meta->get_package_symbol('&'.$type)))[0];
-            if (!$pkg || $pkg ne 'MooseX::Types') {
-                $tc = qq{'${tc}'};
-                last;
-            }
+        if (scalar @tcs > 1) {
+            $tc = Moose::Meta::TypeConstraint::Union->new(type_constraints => \@tcs);
+            Moose::Util::TypeConstraints::register_type_constraint($tc)
+                unless Moose::Util::TypeConstraints::find_type_constraint($tc->name);
+        }
+        else {
+            $tc = $tcs[0];
         }
     }
 
     if ($param->has_constraints) {
         my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
-        $tc = "Moose::Util::TypeConstraints::subtype(${tc}, sub {${cb}})";
+        my $code = eval "sub {${cb}}";
+        $tc = subtype($tc, $code);
     }
 
-    my $required = $param->required ? 1 : 0;
-
-    $spec .= "{";
-    $spec .= "required => ${required},";
-    $spec .= "isa => ${tc}," if defined $tc;
-    $spec .= "default => ${\$param->default_value}," if $param->has_default_value;
-    $spec .= "},";
-
-    return $spec;
+    my %spec;
+    $spec{ required } = $param->required ? 1 : 0;
+    $spec{ isa      } = $tc if defined $tc;
+    $spec{ default  } = $param->default_value if $param->has_default_value;
+    return \%spec;
 }
 
 sub parse_proto {
     my ($self, $proto) = @_;
     $proto ||= '';
-    my ($vars, $param_spec) = (q//) x 2;
+
+    my $vars = q{};
+    my @param_spec;
 
     my $sig = Parse::Method::Signatures->signature("(${proto})");
     croak "Invalid method signature (${proto})"
@@ -89,40 +90,52 @@ sub parse_proto {
 
     if ($sig->has_invocant) {
         my $invocant = $sig->invocant;
-        $vars       .= $invocant->variable_name . q{,};
-        $param_spec .= $self->param_to_spec($invocant);
+        $vars .= $invocant->variable_name . q{,};
+        push @param_spec, $self->param_to_spec($invocant);
     }
     else {
-        $vars       .= '$self,';
-        $param_spec .= '{ required => 1 },';
+        $vars .= '$self,';
+        push @param_spec, { required => 1 };
     }
 
     if ($sig->has_positional_params) {
         for my $param ($sig->positional_params) {
             $vars .= $param->variable_name . q{,};
-            $param_spec .= $self->param_to_spec($param);
+            push @param_spec, $self->param_to_spec($param);
         }
     }
 
     if ($sig->has_named_params) {
         for my $param ($sig->named_params) {
             $vars .= $param->variable_name . q{,};
-
-            my $label    = $param->label;
-            $param_spec .= "${label} => " . $self->param_to_spec($param);
+            push @param_spec, $param->label => $self->param_to_spec($param);
         }
     }
 
-    return ($vars, $param_spec);
+    return ($sig, $vars, \@param_spec);
 }
 
 sub inject_parsed_proto {
-    my ($self, $vars, $param_spec) = @_;
-    return "my (${vars}) = MooseX::Method::Signatures::validate(\\\@_, ${param_spec});";
+    my ($self, $vars) = @_;
+    return "my (${vars}) = \@_;";
 }
 
-sub code_for {
-    my ($self, $name) = @_;
+sub parser {
+    my $self = shift;
+    $self->init(@_);
+
+    $self->skip_declarator;
+    my $name   = $self->strip_name;
+    my $proto  = $self->strip_proto;
+    my $attrs  = $self->strip_attrs;
+    my ($sig, $vars, $param_spec) = $self->parse_proto($proto);
+    my $inject = $self->inject_parsed_proto($vars);
+
+    if (defined $name) {
+        $inject = $self->scope_injector_call() . $inject;
+    }
+
+    $self->inject_if_block($inject, $attrs ? "sub ${attrs} " : '');
 
     my $pkg;
     my $meth_name = defined $name
@@ -138,7 +151,9 @@ sub code_for {
 
     my $create_meta_method = sub {
         my ($code) = @_;
-        return Moose::Meta::Method->wrap(
+        return MooseX::Method::Signatures::Meta::Method->wrap(
+            _signature   => $sig,
+            _param_spec  => $param_spec,
             body         => $code,
             package_name => $pkg,
             name         => $meth_name,
@@ -146,18 +161,18 @@ sub code_for {
     };
 
     if (defined $name) {
-        return sub (&) {
+        $self->shadow(sub (&) {
             my ($code) = @_;
             my $meth = $create_meta_method->($code);
             my $meta = Moose::Meta::Class->initialize($pkg);
             $meta->add_method($meth_name => $meth);
             return;
-        };
+        });
     }
     else {
-        return sub (&) {
+        $self->shadow(sub (&) {
             return $create_meta_method->(shift);
-        };
+        });
     }
 }
 
