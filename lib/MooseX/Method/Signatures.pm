@@ -26,13 +26,6 @@ has target => (
     required => 1,
 );
 
-has keyword => (
-    is       => 'ro',
-    isa      => Str,
-    init_arg => 'name',
-    required => 1,
-);
-
 sub import {
     my ($class) = @_;
     my $caller = caller();
