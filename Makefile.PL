@@ -16,6 +16,6 @@ requires 'namespace::clean';
 
 test_requires 'Test::Exception';
 
-extra_tests;
+extra_tests();
 
 WriteAll;
