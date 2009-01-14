@@ -335,6 +335,99 @@ value.
 
 =head2 Interaction with L<Moose::Role>
 
+=head3 Methods not seen by a role's C<requires>
+
+Because the processing of the L<MooseX::Method::Signatures>
+C<method> and the L<Moose> C<with> keywords are both 
+done at runtime, it can happen that a role will require
+a method before it is declared (which will cause 
+Moose to complain very loudly and abort the program).
+
+For example, the following will not work:
+
+    # in file Canine.pm
+
+    package Canine;
+
+    use Moose;
+    use MooseX::Method::Signatures;
+
+    with 'Watchdog';
+
+    method bark { print "Woof!\n"; }
+
+    1;
+
+
+    # in file Watchdog.pm
+
+    package Watchdog;
+
+    use Moose::Role;
+
+    requires 'bark';  # will assert! evaluated before 'method' is processed
+
+    sub warn_intruder {
+        my $self = shift;
+        my $intruder = shift;
+
+        $self->bark until $intruder->gone;
+    }
+
+    1;
+
+
+A workaround for this problem is to use C<with> only
+after the methods have been defined.  To take our previous
+example, B<Canine> could be reworked thus:
+
+    package Canine;
+
+    use Moose;
+    use MooseX::Method::Signatures;
+
+    method bark { print "Woof!\n"; }
+
+    with 'Watchdog';
+
+    1;
+
+
+A better solution is to use L<MooseX::Declare> instead of plain
+L<MooseX::Method::Signatures>. It defers application of roles until the end
+of the class definition. With it, our example would becomes:
+
+
+    # in file Canine.pm
+
+    use MooseX::Declare;
+
+    class Canine with Watchdog {
+
+        method bark { print "Woof!\n"; }
+
+    }
+
+    1;
+
+    # in file Watchdog.pm
+
+    use MooseX::Declare;
+
+    role Watchdog { 
+
+        requires 'bark';  
+
+        method warn_intruder ( $intruder ) {
+            $self->bark until $intruder->gone;
+        }
+    }
+
+    1;
+
+
+=head3 I<Subroutine redefined> warnings
+
 When composing a L<Moose::Role> into a class that uses
 L<MooseX::Method::Signatures>, you may get a "Subroutine redefined"
 warning. This happens when both the role and the class define a
@@ -343,6 +436,7 @@ defined in the class takes precedence) To eliminate this warning,
 make sure that your C<with> declaration happens after any
 method/subroutine declarations that may have the same name as a
 method/subroutine within a role.
+
 
 =head1 SEE ALSO
 
