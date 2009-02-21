@@ -30,8 +30,5 @@ use Test::Exception;
 lives_ok(sub { TestClass->foo('42') });
 dies_ok(sub { TestClass->foo('bar') });
 
-TODO: {
-    local $TODO = 'parameterized MX::Types not supported yet';
-    lives_ok(sub { TestClass->bar(['42', '23']) });
-    dies_ok(sub { TestClass->bar(['foo', 'bar']) });
-}
+lives_ok(sub { TestClass->bar(['42', '23']) });
+dies_ok(sub { TestClass->bar(['foo', 'bar']) });

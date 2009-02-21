@@ -10,7 +10,7 @@ use Parse::Method::Signatures;
 use Moose::Meta::Class;
 use Moose::Util::TypeConstraints;
 use MooseX::Meta::Signature::Combined;
-use MooseX::Types::Moose qw/Str/;
+use MooseX::Types::Moose qw/Str Any/;
 use MooseX::Method::Signatures::Meta::Method;
 
 use namespace::clean -except => 'meta';
@@ -46,23 +46,9 @@ sub setup_for {
 sub param_to_spec {
     my ($self, $param) = @_;
 
-    my $tc;
-
-    if ($param->has_type_constraints) {
-        my @tcs = map {
-            my $code = $self->target->can($_);
-            $code ? eval { $code->() } : Moose::Util::TypeConstraints::find_or_parse_type_constraint($_)
-        } $param->type_constraints;
-
-        if (scalar @tcs > 1) {
-            $tc = Moose::Meta::TypeConstraint::Union->new(type_constraints => \@tcs);
-            Moose::Util::TypeConstraints::register_type_constraint($tc)
-                unless Moose::Util::TypeConstraints::find_type_constraint($tc->name);
-        }
-        else {
-            $tc = $tcs[0];
-        }
-    }
+    my $tc = Any;
+    $tc = $param->meta_type_constraint
+        if $param->has_type_constraints;
 
     if ($param->has_constraints) {
         my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
@@ -84,7 +70,16 @@ sub parse_proto {
     my $vars = q{};
     my @param_spec;
 
-    my $sig = Parse::Method::Signatures->signature("(${proto})");
+    my $sig = Parse::Method::Signatures->signature(
+        input => "(${proto})",
+        type_constraint_callback => sub {
+            my ($tc, $name) = @_;
+            my $code = $self->target->can($name);
+            return $code
+                ? eval { $code->() }
+                : $tc->find_registered_constraint($name);
+        },
+    );
     croak "Invalid method signature (${proto})"
         unless $sig;
 
