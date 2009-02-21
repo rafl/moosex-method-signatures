@@ -11,3 +11,5 @@ inc
 MooseX-Method-Signatures-*
 MANIFEST*
 !MANIFEST.SKIP
+README
+Debian_CPANTS.txt
