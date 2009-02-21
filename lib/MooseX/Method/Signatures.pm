@@ -171,17 +171,6 @@ sub parser {
     }
 }
 
-sub validate {
-    my ($args, @param_spec) = @_;
-
-    my @named = grep { !ref $_ } @param_spec;
-    my @ret = MooseX::Meta::Signature::Combined->new(@param_spec)->validate(@{ $args });
-    return @ret unless @named;
-
-    my $named_vals = pop @ret;
-    return (@ret, map { $named_vals->{$_} } @named);
-}
-
 __PACKAGE__->meta->make_immutable;
 
 1;
