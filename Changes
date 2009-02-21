@@ -1,3 +1,18 @@
+0.07  Sat, 21 Feb 2009 20:31:47 +0100
+  * Tests for anon methods.
+  * Use B::Hooks::EndOfScope instead of Scope::Guard and %^H.
+  * Add TODO test for using exported types in signatures.
+  * Port from Perl6::Signature to Parse::Method::Signatures.
+  * Port to Devel::Declare::MethodInstaller::Simple.
+  * Support for MX::Types.
+  * Use a custom method metaclass.
+  * Doc patch to mention interaction with Moose::Role (Jonathan Scott Duff).
+  * Add more tests for eval and various signatures (Kent Fredric).
+  * TODO test for sane error messages with files and line numbers (Rhesa Rozendaal).
+  * Don't confuse people with the lack of "use Moose" in SYSOPSIS (Ricardo SIGNES).
+  * Add information for repo and bugtracker in META.yml (Yanick Champoux).
+  * Explain interaction with Role's 'require' (Yanick Champoux).
+
 0.06  Tue, 14 Oct 2008 05:43:35 +0200
   * Use Moose meta methods instead of just coderefs.
   * Add a setup_for method to set up the method keyword for something different
