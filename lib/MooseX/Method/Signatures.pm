@@ -195,6 +195,7 @@ MooseX::Method::Signatures - Method declarations with type constraints and no so
 
     package Foo;
 
+    use Moose;
     use MooseX::Method::Signatures;
 
     method morning (Str $name) {
