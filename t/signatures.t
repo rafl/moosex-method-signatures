@@ -24,40 +24,40 @@ my @signatures;
 @signatures = (
 
     # basic tests.
-    [ $ISTODO, '$arg',   'Optional(implicit) Positional' ],    #1
-    [ $ISTODO, '$arg?',  'Optional Positional' ],
-    [ $ISTODO, '$arg!',  'Required Positional' ],
-    [ $ISTODO, ':$arg',  'Required(implicit) Named' ],
-    [ $ISTODO, ':$arg?', 'Optional Named' ],
-    [ $ISTODO, ':$arg!', 'Required Named' ],                   #6
+    [ 0, '$arg',   'Optional(implicit) Positional' ],    #1
+    [ 0, '$arg?',  'Optional Positional' ],
+    [ 0, '$arg!',  'Required Positional' ],
+    [ 0, ':$arg',  'Required(implicit) Named' ],
+    [ 0, ':$arg?', 'Optional Named' ],
+    [ 0, ':$arg!', 'Required Named' ],                   #6
 
     # type tests
-    [ $ISTODO, 'Str $arg',       'Positional String Type' ],    #7
-    [ $ISTODO, 'Int $arg',       'Positional Int Type' ],
-    [ $ISTODO, 'Bar::Foo $arg',  'Positional Class Type' ],
-    [ $ISTODO, 'Str :$arg',      'Named String Type' ],
-    [ $ISTODO, 'Int :$arg',      'Named Int Type' ],
-    [ $ISTODO, 'Bar::Foo :$arg', 'Named Class Type' ],          #12
+    [ 0, 'Str $arg',       'Positional String Type' ],    #7
+    [ 0, 'Int $arg',       'Positional Int Type' ],
+    [ 0, 'Bar::Foo $arg',  'Positional Class Type' ],
+    [ 0, 'Str :$arg',      'Named String Type' ],
+    [ 0, 'Int :$arg',      'Named Int Type' ],
+    [ 0, 'Bar::Foo :$arg', 'Named Class Type' ],          #12
 
     # coerce does tests
-    [ $ISTODO, 'Str $arg does coerce',  'COERCE Positional String Type' ],  # 13
-    [ $ISTODO, 'Int $arg does coerce ', 'COERCE Positional Int Type' ],
-    [ $ISTODO, 'Bar::Foo $arg does coerce',  'COERCE Positi Class Type' ],
-    [ $ISTODO, 'Str :$arg does coerce',      'COERCE Named String Type' ],
-    [ $ISTODO, 'Int :$arg does coerce',      'COERCE Named Int Type' ],
-    [ $ISTODO, 'Bar::Foo :$arg does coerce', 'COERCE Named Class Type' ],
-    [ $ISTODO, ':$arg does coerce',          'COERCE Named ' ],
-    [ $ISTODO, '$arg does coerce',           'COERCE Postional ' ],         # 20
+    [ 0, 'Str $arg does coerce',  'COERCE Positional String Type' ],  # 13
+    [ 0, 'Int $arg does coerce ', 'COERCE Positional Int Type' ],
+    [ 0, 'Bar::Foo $arg does coerce',  'COERCE Positi Class Type' ],
+    [ 0, 'Str :$arg does coerce',      'COERCE Named String Type' ],
+    [ 0, 'Int :$arg does coerce',      'COERCE Named Int Type' ],
+    [ 0, 'Bar::Foo :$arg does coerce', 'COERCE Named Class Type' ],
+    [ 0, ':$arg does coerce',          'COERCE Named ' ],
+    [ 0, '$arg does coerce',           'COERCE Postional ' ],         # 20
 
     # coerce is tests
-    [ $ISTODO, 'Str $arg is coerce',  'COERCE_IS Positional String Type' ],  #21
-    [ $ISTODO, 'Int $arg is coerce ', 'COERCE_IS Positional Int Type' ],
-    [ $ISTODO, 'Bar::Foo $arg is coerce',  'COERCE_IS Positi Class Type' ],
-    [ $ISTODO, 'Str :$arg is coerce',      'COERCE_IS Named String Type' ],
-    [ $ISTODO, 'Int :$arg is coerce',      'COERCE_IS Named Int Type' ],
-    [ $ISTODO, 'Bar::Foo :$arg is coerce', 'COERCE_IS Named Class Type' ],
-    [ $ISTODO, ':$arg is coerce',          'COERCE_IS Named ' ],
-    [ $ISTODO, '$arg is coerce',           'COERCE_IS Postional ' ],        # 28
+    [ 0, 'Str $arg is coerce',  'COERCE_IS Positional String Type' ],  #21
+    [ 0, 'Int $arg is coerce ', 'COERCE_IS Positional Int Type' ],
+    [ 0, 'Bar::Foo $arg is coerce',  'COERCE_IS Positi Class Type' ],
+    [ 0, 'Str :$arg is coerce',      'COERCE_IS Named String Type' ],
+    [ 0, 'Int :$arg is coerce',      'COERCE_IS Named Int Type' ],
+    [ 0, 'Bar::Foo :$arg is coerce', 'COERCE_IS Named Class Type' ],
+    [ 0, ':$arg is coerce',          'COERCE_IS Named ' ],
+    [ 0, '$arg is coerce',           'COERCE_IS Postional ' ],        # 28
 
     # coerce is where tests
     [
@@ -94,31 +94,31 @@ my @signatures;
     [ $ISTODO, '$arg is coerce where { 1 }',   'COERCE_WHERE Postional ' ], # 36
 
     # where tests
-    [ $ISTODO, 'Str $arg where { 1 } ', 'WHERE Positional String Type' ],    #37
-    [ $ISTODO, 'Int $arg where { 1 } ', 'WHERE Positional Int Type' ],
-    [ $ISTODO, 'Bar::Foo $arg where { 1 }',  'WHERE Positi Class Type' ],
-    [ $ISTODO, 'Str :$arg where { 1 }',      'WHERE Named String Type' ],
-    [ $ISTODO, 'Int :$arg where { 1 }',      'WHERE Named Int Type' ],
-    [ $ISTODO, 'Bar::Foo :$arg where { 1 }', 'WHERE Named Class Type' ],
-    [ $ISTODO, ':$arg  where { 1 } ',        'WHERE Named ' ],
-    [ $ISTODO, '$arg  where { 1 }',          'WHERE Postional ' ],          # 44
+    [ 0, 'Str $arg where { 1 } ', 'WHERE Positional String Type' ],    #37
+    [ 0, 'Int $arg where { 1 } ', 'WHERE Positional Int Type' ],
+    [ 0, 'Bar::Foo $arg where { 1 }',  'WHERE Positi Class Type' ],
+    [ 0, 'Str :$arg where { 1 }',      'WHERE Named String Type' ],
+    [ 0, 'Int :$arg where { 1 }',      'WHERE Named Int Type' ],
+    [ 0, 'Bar::Foo :$arg where { 1 }', 'WHERE Named Class Type' ],
+    [ 0, ':$arg  where { 1 } ',        'WHERE Named ' ],
+    [ 0, '$arg  where { 1 }',          'WHERE Postional ' ],          # 44
 
     # defaults tests.
-    [ $ISTODO, '$arg = 42',   'Default+ Optional(implicit) Positional' ],    #45
-    [ $ISTODO, '$arg? = 42',  'Default+ Optional Positional' ],
-    [ $ISTODO, '$arg! = 42',  'Default+ Required Positional' ],
-    [ $ISTODO, ':$arg = 42',  'Default+ Required(implicit) Named' ],
-    [ $ISTODO, ':$arg? = 42', 'Default+ Optional Named' ],
-    [ $ISTODO, ':$arg! = 42', 'Default+ Required Named' ],                   #50
+    [ 0, '$arg = 42',   'Default+ Optional(implicit) Positional' ],    #45
+    [ 0, '$arg? = 42',  'Default+ Optional Positional' ],
+    [ 0, '$arg! = 42',  'Default+ Required Positional' ],
+    [ 0, ':$arg = 42',  'Default+ Required(implicit) Named' ],
+    [ 0, ':$arg? = 42', 'Default+ Optional Named' ],
+    [ 0, ':$arg! = 42', 'Default+ Required Named' ],                   #50
 
     # invocant tests.
-    [ $ISTODO, '$self: $arg',   'Invocant + Positional ' ],                  #51
-    [ $ISTODO, '$class: $arg',  'Nondefault Invocant + Positional ' ],
-    [ $ISTODO, '$self: :$arg',  'Invocant + Named ' ],                       #53
-    [ $ISTODO, '$class: :$arg', 'Nondefault Invocant + Named ' ],
+    [ 0, '$self: $arg',   'Invocant + Positional ' ],                  #51
+    [ 0, '$class: $arg',  'Nondefault Invocant + Positional ' ],
+    [ 0, '$self: :$arg',  'Invocant + Named ' ],                       #53
+    [ 0, '$class: :$arg', 'Nondefault Invocant + Named ' ],
 
     # label tests .
-    [ $ISTODO, ':foo($arg)', 'Label' ],                                      #55
+    [ 0, ':foo($arg)', 'Label' ],                                      #55
 );
 
 plan tests => $#signatures + 1;
