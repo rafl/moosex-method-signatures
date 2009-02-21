@@ -6,7 +6,7 @@ name 'MooseX-Method-Signatures';
 all_from 'lib/MooseX/Method/Signatures.pm';
 
 requires 'B::Hooks::EndOfScope' => '0.05'; # so semicolon injection works when string evals are involved
-requires 'Parse::Method::Signatures';
+requires 'Parse::Method::Signatures' => '1.002000';
 requires 'Devel::Declare' => '0.003004';
 requires 'Moose::Util::TypeConstraints';
 requires 'Moose';
