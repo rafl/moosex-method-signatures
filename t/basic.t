@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 26;
+use Test::More tests => 27;
 use Test::Exception;
 
 use FindBin;
@@ -40,6 +40,7 @@ dies_ok(sub { $o->affe('foo') });
 
 dies_ok(sub { $o->named });
 dies_ok(sub { $o->named(optional => 42) });
+throws_ok(sub { $o->named }, qr/\b at \b .* \b line \b \d+/x, "dies with proper exception");
 
 lives_ok(sub {
     is_deeply(
@@ -73,3 +74,4 @@ use MooseX::Method::Signatures;
 
 my $anon = method ($foo, $bar) { };
 isa_ok($anon, 'Moose::Meta::Method');
+
