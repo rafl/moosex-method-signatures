@@ -5,6 +5,7 @@ package TestClass;
 
 use Moose;
 use MooseX::Method::Signatures;
+use Moose::Util::TypeConstraints;
 
 method new ($class: Str $foo, Int $bar = 42
                               where { $_ % 2 == 0 }
@@ -34,6 +35,17 @@ method named (:$optional, :$required!) {
 method combined ($a, $b, $c?, :$optional, :$required!) {
     return ($a, $b, $c, $optional, $required);
 }
+
+BEGIN {
+    class_type 'MyType';
+
+    coerce 'MyType',
+        from 'HashRef',
+        via { bless { %{$_} } => 'MyType' };
+}
+
+method without_coercion (MyType $foo) { $foo }
+method with_coercion (MyType $foo does coerce) { $foo }
 
 no Moose;
 
