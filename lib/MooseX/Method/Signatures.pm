@@ -60,6 +60,14 @@ sub param_to_spec {
     $spec{ required } = $param->required ? 1 : 0;
     $spec{ isa      } = $tc if defined $tc;
     $spec{ default  } = $param->default_value if $param->has_default_value;
+
+    if ($param->has_traits) {
+        for my $trait (@{ $param->param_traits }) {
+            next unless $trait->[1] eq 'coerce';
+            $spec{coerce} = 1;
+        }
+    }
+
     return \%spec;
 }
 
