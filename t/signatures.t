@@ -5,7 +5,6 @@ use Test::More;
 use Test::Exception;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
-use Readonly;
 
 {
 
@@ -14,8 +13,8 @@ use Readonly;
     has 'x' => ( isa => 'Str', );
 }
 
-Readonly my $ISTODO => 1;
-Readonly my $ISFAIL => 2;
+my $ISTODO = 1;
+my $ISFAIL = 2;
 
 # == 0 disables TODO mode
 my $dotodo = 1;
