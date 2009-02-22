@@ -280,6 +280,15 @@ signature syntax is supported yet and some of it never will be.
     method foo (:     $affe ) # called as $obj->foo(affe => $value)
     method bar (:apan($affe)) # called as $obj->foo(apan => $value)
 
+=head2 Traits
+
+    method foo (Affe $bar does trait)
+    method foo (Affe $bar is trait)
+
+The only currently supported trait is C<coerce>, which will attempt to coerce
+the value provided if it doesn't satisfy the requirements of the type
+constraint.
+
 =head2 Complex Example
 
     method foo ( SomeClass $thing where { $_->can('stuff') }:
