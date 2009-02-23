@@ -10,7 +10,7 @@ use Parse::Method::Signatures;
 use Moose::Meta::Class;
 use Moose::Util::TypeConstraints;
 use Moose::Util qw/does_role/;
-use MooseX::Types::Moose qw/Str Value Maybe Object ArrayRef/;
+use MooseX::Types::Moose qw/Str Defined Maybe Object ArrayRef/;
 use MooseX::Types::Structured qw/Dict Tuple Optional/;
 use aliased 'Parse::Method::Signatures::Param::Named';
 use MooseX::Method::Signatures::Meta::Method;
@@ -48,7 +48,7 @@ sub setup_for {
 sub param_to_spec {
     my ($self, $param) = @_;
 
-    my $tc = Value;
+    my $tc = Defined;
     $tc = $param->meta_type_constraint
         if $param->has_type_constraints;
 
