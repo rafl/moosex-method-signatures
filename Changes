@@ -1,3 +1,11 @@
+0.09  Mon, 23 Feb 2009 08:07:47 +0100
+  * Port to MX::Types::Structured.
+    + Much more useful error messages, including backtraces.
+    + Don't pass undef for parameters now actual value was provided for.
+  * Require a Defined value, not a simple Value when no type constraints are
+    given.
+  * Add more tests. Improve existing tests.
+
 0.08  Sun, 22 Feb 2009 02:15:40 +0100
   * Don't depend on Readonly in the tests.
   * Allow parameters to be coerced using the coerce trait.
