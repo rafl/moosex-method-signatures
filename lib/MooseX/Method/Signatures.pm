@@ -10,6 +10,7 @@ use Parse::Method::Signatures;
 use Moose::Meta::Class;
 use Moose::Util::TypeConstraints;
 use Moose::Util qw/does_role/;
+use MooseX::Types::Util qw/has_available_type_export/;
 use MooseX::Types::Moose qw/Str Defined Maybe Object ArrayRef/;
 use MooseX::Types::Structured qw/Dict Tuple Optional/;
 use aliased 'Parse::Method::Signatures::Param::Named';
@@ -89,10 +90,8 @@ sub parse_proto {
         input => "(${proto})",
         type_constraint_callback => sub {
             my ($tc, $name) = @_;
-            my $code = $self->target->can($name);
-            return $code
-                ? eval { $code->() }
-                : $tc->find_registered_constraint($name);
+            return has_available_type_export($self->target, $name)
+                || $tc->find_registered_constraint($name);
         },
     );
     croak "Invalid method signature (${proto})"
