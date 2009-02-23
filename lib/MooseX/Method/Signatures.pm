@@ -144,7 +144,7 @@ sub parse_proto {
             for my $param (@positional) {
                 push @positional_args,
                     $#{ $_ } < $i
-                        ? $param->{default}
+                        ? (exists $param->{default} ? $param->{default} : ())
                         : $coerce_param->($param, $_->[$i]);
                 $i++;
             }
