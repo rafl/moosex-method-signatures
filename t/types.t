@@ -27,8 +27,10 @@ use Test::Exception;
     method bar (ArrayRef[CustomType] $baz) { }
 }
 
-lives_ok(sub { TestClass->foo('42') });
-dies_ok(sub { TestClass->foo('bar') });
+my $o = bless {} => 'TestClass';
 
-lives_ok(sub { TestClass->bar(['42', '23']) });
-dies_ok(sub { TestClass->bar(['foo', 'bar']) });
+lives_ok(sub { $o->foo('42') });
+dies_ok(sub { $o->foo('bar') });
+
+lives_ok(sub { $o->bar(['42', '23']) });
+dies_ok(sub { $o->bar(['foo', 'bar']) });
