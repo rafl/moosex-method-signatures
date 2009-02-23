@@ -43,7 +43,7 @@ dies_ok(sub { $o->named(optional => 42) });
 
 {
     local $TODO = 'no useful error messages yet';
-    throws_ok(sub { $o->named }, qr/\b at \b .* \b line \b \d+/x, "dies with proper exception");
+    throws_ok(sub { $o->named }, qr/\b at \b .* \b line \s+ \d+/x, "dies with proper exception");
 }
 
 lives_ok(sub {
