@@ -20,6 +20,11 @@ has _param_spec => (
     auto_deref => 1,
 );
 
+has type_constraint => (
+    is => 'ro',
+    required => 1,
+);
+
 around wrap => sub {
     my ($orig, $class, %args) = @_;
     my $self;
@@ -36,11 +41,16 @@ sub validate {
     my @param_spec = $self->_param_spec;
     my @named = grep { !ref $_ } @param_spec;
 
-    my @ret = MooseX::Meta::Signature::Combined->new(@param_spec)->validate(@{ $args });
-    return @ret unless @named;
+    my $coerced = $self->type_constraint->coerce($args);
+    if ($coerced == $args) {
+        confess 'failed to coerce';
+    }
 
-    my $named_vals = pop @ret;
-    return (@ret, map { $named_vals->{$_} } @named);
+    if (defined (my $msg = $self->type_constraint->validate($coerced))) {
+        confess $msg;
+    }
+
+    return @{ $coerced->[0] }, map { $coerced->[1]->{$_} } @named;
 }
 
 __PACKAGE__->meta->make_immutable;
