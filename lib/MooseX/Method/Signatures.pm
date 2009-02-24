@@ -521,4 +521,20 @@ Licensed under the same terms as Perl itself.
 
 Florian Ragwitz E<lt>rafl@debian.orgE<gt>
 
+With contributions from:
+
+=over 4
+
+=item Jonathan Scott Duff E<lt>duff@pobox.comE<gt>
+
+=item Kent Fredric E<lt>kentfredric@gmail.comE<gt>
+
+=item Rhesa Rozendaal E<lt>rhesa@cpan.orgE<gt>
+
+=item Ricardo SIGNES E<lt>rjbs@cpan.orgE<gt>
+
+=item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
+
+=back
+
 =cut
