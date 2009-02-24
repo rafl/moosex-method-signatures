@@ -509,7 +509,7 @@ L<Moose>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2008  Florian Ragwitz
+Copyright (c) 2008, 2009  Florian Ragwitz
 
 Code based on the tests for L<Devel::Declare>.
 
