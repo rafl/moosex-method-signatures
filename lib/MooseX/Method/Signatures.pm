@@ -507,16 +507,6 @@ L<Parse::Method::Signatures>
 
 L<Moose>
 
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (c) 2008, 2009  Florian Ragwitz
-
-Code based on the tests for L<Devel::Declare>.
-
-Documentation based on L<MooseX::Method> and L<Method::Signatures>.
-
-Licensed under the same terms as Perl itself.
-
 =head1 AUTHOR
 
 Florian Ragwitz E<lt>rafl@debian.orgE<gt>
@@ -536,5 +526,15 @@ With contributions from:
 =item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
 
 =back
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (c) 2008, 2009  Florian Ragwitz
+
+Code based on the tests for L<Devel::Declare>.
+
+Documentation based on L<MooseX::Method> and L<Method::Signatures>.
+
+Licensed under the same terms as Perl itself.
 
 =cut
