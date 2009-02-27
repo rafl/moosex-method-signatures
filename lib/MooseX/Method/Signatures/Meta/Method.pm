@@ -32,6 +32,13 @@ has _lexicals => (
     builder => '_build__lexicals',
 );
 
+has injectable_code => (
+    is      => 'ro',
+    isa     => Str,
+    lazy    => 1,
+    builder => '_build_injectable_code',
+);
+
 has _positional_args => (
     is      => 'ro',
     isa     => ArrayRef,
@@ -144,6 +151,12 @@ sub _build__lexicals {
     }
 
     return \@lexicals;
+}
+
+sub _build_injectable_code {
+    my ($self) = @_;
+    my $vars = join q{,}, @{ $self->_lexicals };
+    return "my (${vars}) = \@_;";
 }
 
 sub _build__positional_args {

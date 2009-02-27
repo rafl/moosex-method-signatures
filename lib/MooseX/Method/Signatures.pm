@@ -31,12 +31,6 @@ sub setup_for {
     return;
 }
 
-sub inject_parsed_proto {
-    my ($self, $lexicals) = @_;
-    my $vars = join q{,}, @{ $lexicals };
-    return "my (${vars}) = \@_;";
-}
-
 sub parser {
     my $self = shift;
     $self->init(@_);
@@ -62,7 +56,7 @@ sub parser {
         name         => $meth_name,
     );
 
-    my $inject = $self->inject_parsed_proto($method->_lexicals);
+    my $inject = $method->injectable_code;
     $inject = $self->scope_injector_call() . $inject
         if defined $name;
 
