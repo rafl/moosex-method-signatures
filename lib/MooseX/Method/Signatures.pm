@@ -56,13 +56,11 @@ sub parser {
         $pkg = $self->get_curstash_name;
     }
 
-    my %args = (
+    my $method = MooseX::Method::Signatures::Meta::Method->wrap(
         signature    => q{(} . ($proto || '') . q{)},
-        body         => sub { 'DUMMY' },
         package_name => $pkg,
         name         => $meth_name,
     );
-    my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
 
     my $inject = $self->inject_parsed_proto($method->_lexicals);
     $inject = $self->scope_injector_call() . $inject
