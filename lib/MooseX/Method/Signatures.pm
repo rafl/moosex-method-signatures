@@ -71,11 +71,8 @@ sub parser {
     $self->inject_if_block($inject, $attrs ? "sub ${attrs} " : '');
 
     my $create_meta_method = sub {
-        my ($code) = @_;
-        return MooseX::Method::Signatures::Meta::Method->wrap(
-            (map { ($_->name => $_->get_value($method)) } $method->meta->get_all_attributes),
-            body => $code,
-        );
+        $method->_set_actual_body(shift);
+        return $method;
     };
 
     if (defined $name) {
