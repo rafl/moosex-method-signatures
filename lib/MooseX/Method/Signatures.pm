@@ -523,6 +523,8 @@ With contributions from:
 
 =item Ricardo SIGNES E<lt>rjbs@cpan.orgE<gt>
 
+=item Steffen Schwigon E<lt>ss5@renormalist.netE<gt>
+
 =item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
 
 =back
