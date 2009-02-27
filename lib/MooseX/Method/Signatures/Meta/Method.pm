@@ -5,7 +5,7 @@ use Parse::Method::Signatures;
 use Moose::Util qw/does_role/;
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Structured qw/Tuple Dict Optional/;
-use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined/;
+use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef/;
 use aliased 'Parse::Method::Signatures::Param::Named';
 
 use namespace::clean -except => 'meta';
@@ -52,12 +52,29 @@ has type_constraint => (
     builder => '_build_type_constraint',
 );
 
+has actual_body => (
+    is        => 'ro',
+    isa       => CodeRef,
+    writer    => '_set_actual_body',
+    predicate => '_has_actual_body',
+);
+
+before actual_body => sub {
+    my ($self) = @_;
+    confess "method doesn't have an actual body yet"
+        unless $self->_has_actual_body;
+};
+
 around wrap => sub {
     my ($orig, $class, %args) = @_;
+
+    $args{actual_body} = delete $args{body}
+        if exists $args{body};
+
     my $self;
     $self = $orig->($class, %args, body => sub {
         @_ = $self->validate(\@_);
-        goto $args{body};
+        goto &{ $self->actual_body };
     });
     return $self;
 };
