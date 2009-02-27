@@ -40,15 +40,11 @@ sub parser {
     my $proto  = $self->strip_proto;
     my $attrs  = $self->strip_attrs;
 
-    my $pkg;
+    my $pkg       = $self->get_curstash_name;
     my $meth_name = defined $name ? $name : '__ANON__';
 
-    if ($meth_name =~ /::/) {
-        ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/;
-    }
-    else {
-        $pkg = $self->get_curstash_name;
-    }
+    ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/
+        if $meth_name =~ /::/;
 
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(
         signature    => q{(} . ($proto || '') . q{)},
