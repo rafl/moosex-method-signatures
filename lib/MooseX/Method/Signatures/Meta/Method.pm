@@ -2,6 +2,7 @@ package MooseX::Method::Signatures::Meta::Method;
 
 use Moose;
 use Parse::Method::Signatures;
+use Scalar::Util qw/weaken/;
 use Moose::Util qw/does_role/;
 use Moose::Util::TypeConstraints;
 use MooseX::Types::Structured qw/Tuple Dict Optional/;
@@ -72,17 +73,47 @@ before actual_body => sub {
         unless $self->_has_actual_body;
 };
 
-around wrap => sub {
-    my ($orig, $class, %args) = @_;
+around package_name => sub {
+    my ($next, $self) = @_;
+    my $ret = $self->$next;
+    confess "method doesn't have a package_name yet"
+        unless defined $ret;
+    return $ret;
+};
+
+around name => sub {
+    my ($next, $self) = @_;
+    my $ret = $self->$next;
+    confess "method doesn't have a name yet"
+        unless defined $ret;
+    return $ret;
+};
+
+sub _set_name {
+    my ($self, $name) = @_;
+    $self->{name} = $name;
+}
+
+sub _set_package_name {
+    my ($self, $package_name) = @_;
+    $self->{package_name} = $package_name;
+}
+
+sub wrap {
+    my ($class, %args) = @_;
 
     $args{actual_body} = delete $args{body}
         if exists $args{body};
 
     my $self;
-    $self = $orig->($class, %args, body => sub {
+    $self = $class->_new(%args, body => sub {
         @_ = $self->validate(\@_);
         goto &{ $self->actual_body };
     });
+
+    weaken($self->{associated_metaclass})
+        if $self->{associated_metaclass};
+
     return $self;
 };
 
