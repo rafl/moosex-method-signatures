@@ -4,15 +4,8 @@ use warnings;
 package MooseX::Method::Signatures;
 
 use Moose;
-use Carp qw/croak/;
 use Devel::Declare ();
-use Parse::Method::Signatures;
 use Moose::Meta::Class;
-use Moose::Util::TypeConstraints;
-use Moose::Util qw/does_role/;
-use MooseX::Types::Moose qw/Str Defined Maybe Object ArrayRef/;
-use MooseX::Types::Structured qw/Dict Tuple Optional/;
-use aliased 'Parse::Method::Signatures::Param::Named';
 use MooseX::Method::Signatures::Meta::Method;
 
 use namespace::clean -except => 'meta';
@@ -20,13 +13,6 @@ use namespace::clean -except => 'meta';
 our $VERSION = '0.09';
 
 extends qw/Moose::Object Devel::Declare::MethodInstaller::Simple/;
-
-has target => (
-    is       => 'ro',
-    isa      => Str,
-    init_arg => 'into',
-    required => 1,
-);
 
 sub import {
     my ($class) = @_;
@@ -45,134 +31,9 @@ sub setup_for {
     return;
 }
 
-sub param_to_spec {
-    my ($self, $param) = @_;
-
-    my $tc = Defined;
-    $tc = $param->meta_type_constraint
-        if $param->has_type_constraints;
-
-    if ($param->has_constraints) {
-        my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
-        my $code = eval "sub {${cb}}";
-        $tc = subtype($tc, $code);
-    }
-
-    my %spec;
-    $spec{tc} = $param->required
-        ? $tc
-        : does_role($param, Named)
-            ? Optional[$tc]
-            : Maybe[$tc];
-
-    $spec{default} = $param->default_value
-        if $param->has_default_value;
-
-    if ($param->has_traits) {
-        for my $trait (@{ $param->param_traits }) {
-            next unless $trait->[1] eq 'coerce';
-            $spec{coerce} = 1;
-        }
-    }
-
-    return \%spec;
-}
-
-sub parse_proto {
-    my ($self, $proto) = @_;
-    $proto ||= '';
-
-    my $vars = q{};
-    my (@named, @positional);
-
-    my $sig = Parse::Method::Signatures->signature(
-        input => "(${proto})",
-        type_constraint_callback => sub {
-            my ($tc, $name) = @_;
-            my $code = $self->target->can($name);
-            return $code
-                ? eval { $code->() }
-                : $tc->find_registered_constraint($name);
-        },
-    );
-    croak "Invalid method signature (${proto})"
-        unless $sig;
-
-    if ($sig->has_invocant) {
-        my $invocant = $sig->invocant;
-        $vars .= $invocant->variable_name . q{,};
-        push @positional, $self->param_to_spec($invocant);
-    }
-    else {
-        $vars .= '$self,';
-        push @positional, { tc => Object };
-    }
-
-    if ($sig->has_positional_params) {
-        for my $param ($sig->positional_params) {
-            $vars .= $param->variable_name . q{,};
-            push @positional, $self->param_to_spec($param);
-        }
-    }
-
-    if ($sig->has_named_params) {
-        for my $param ($sig->named_params) {
-            $vars .= $param->variable_name . q{,};
-            push @named, $param->label => $self->param_to_spec($param);
-        }
-    }
-
-    my $tc = Tuple[
-        Tuple[ map { $_->{tc}               } @positional ],
-        Dict[  map { ref $_ ? $_->{tc} : $_ } @named      ],
-    ];
-
-    my $coerce_param = sub {
-        my ($spec, $value) = @_;
-        return $value unless exists $spec->{coerce};
-        return $spec->{tc}->coerce($value);
-    };
-
-    my %named = @named;
-
-    coerce $tc,
-        from ArrayRef,
-        via {
-            my (@positional_args, %named_args);
-
-            my $i = 0;
-            for my $param (@positional) {
-                push @positional_args,
-                    $#{ $_ } < $i
-                        ? (exists $param->{default} ? $param->{default} : ())
-                        : $coerce_param->($param, $_->[$i]);
-                $i++;
-            }
-
-            unless ($#{ $_ } < $i) {
-                my %rest = @{ $_ }[$i .. $#{ $_ }];
-                while (my ($key, $spec) = each %named) {
-                    if (exists $rest{$key}) {
-                        $named_args{$key} = $coerce_param->($spec, delete $rest{$key});
-                        next;
-                    }
-
-                    if (exists $spec->{default}) {
-                        $named_args{$key} = $spec->{default};
-                    }
-                }
-
-                @named_args{keys %rest} = values %rest;
-            }
-
-            return [\@positional_args, \%named_args];
-        };
-
-    return ($sig, $vars, [@positional, @named], $tc);
-}
-
 sub inject_parsed_proto {
-    my ($self, $vars) = @_;
+    my ($self, $lexicals) = @_;
+    my $vars = join q{,}, @{ $lexicals };
     return "my (${vars}) = \@_;";
 }
 
@@ -184,19 +45,9 @@ sub parser {
     my $name   = $self->strip_name;
     my $proto  = $self->strip_proto;
     my $attrs  = $self->strip_attrs;
-    my ($sig, $vars, $param_spec, $tc) = $self->parse_proto($proto);
-    my $inject = $self->inject_parsed_proto($vars);
-
-    if (defined $name) {
-        $inject = $self->scope_injector_call() . $inject;
-    }
-
-    $self->inject_if_block($inject, $attrs ? "sub ${attrs} " : '');
 
     my $pkg;
-    my $meth_name = defined $name
-        ? $name
-        : '__ANON__';
+    my $meth_name = defined $name ? $name : '__ANON__';
 
     if ($meth_name =~ /::/) {
         ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/;
@@ -205,16 +56,23 @@ sub parser {
         $pkg = $self->get_curstash_name;
     }
 
+    my %args = (
+        signature    => q{(} . ($proto || '') . q{)},
+        body         => sub { 'DUMMY' },
+        package_name => $pkg,
+        name         => $meth_name,
+    );
+    my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
+
+    my $inject = $self->inject_parsed_proto($method->_lexicals);
+    $inject = $self->scope_injector_call() . $inject
+        if defined $name;
+
+    $self->inject_if_block($inject, $attrs ? "sub ${attrs} " : '');
+
     my $create_meta_method = sub {
-        my ($code) = @_;
-        return MooseX::Method::Signatures::Meta::Method->wrap(
-            _signature      => $sig,
-            _param_spec     => $param_spec,
-            body            => $code,
-            package_name    => $pkg,
-            name            => $meth_name,
-            type_constraint => $tc,
-        );
+        $method->_set_actual_body(shift);
+        return $method;
     };
 
     if (defined $name) {
