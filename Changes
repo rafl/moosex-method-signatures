@@ -1,3 +1,13 @@
+0.10  Sat, 28 Feb 2009 19:04:02 +0100
+  * Mention all contributors.
+  * Update copyright notice for 2009.
+  * Refer to Method::Signatures::Simple.
+  * Move most of the actual functionality into the method metaclass.
+  * Allow adding methods with signature validation without the
+    Devel::Declare sugar.
+  * Allow method names to be quoted strings with possible variable
+    interpolations.
+
 0.09  Mon, 23 Feb 2009 08:07:47 +0100
   * Port to MX::Types::Structured.
     + Much more useful error messages, including backtraces.
