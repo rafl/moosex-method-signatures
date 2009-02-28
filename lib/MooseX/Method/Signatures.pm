@@ -341,6 +341,8 @@ method/subroutine within a role.
 
 =head1 SEE ALSO
 
+L<Method::Signatures::Simple>
+
 L<Method::Signatures>
 
 L<MooseX::Method>
