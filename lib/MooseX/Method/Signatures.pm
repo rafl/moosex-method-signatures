@@ -5,7 +5,9 @@ package MooseX::Method::Signatures;
 
 use Moose;
 use Devel::Declare ();
+use B::Hooks::EndOfScope;
 use Moose::Meta::Class;
+use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
 
 use namespace::clean -except => 'meta';
@@ -23,13 +25,35 @@ sub import {
 sub setup_for {
     my ($class, $pkg) = @_;
 
-    $class->install_methodhandler(
-        into => $pkg,
-        name => 'method',
-    );
+    my $ctx = $class->new(into => $pkg);
+
+    Devel::Declare->setup_for($pkg, {
+        method => { const => sub { $ctx->parser(@_) } },
+    });
+
+    {
+        no strict 'refs';
+        *{ "${pkg}::method" } = sub {};
+    }
 
     return;
 }
+
+override strip_name => sub {
+    my ($self) = @_;
+    my $ret = super;
+    return $ret if defined $ret;
+
+    my $line = $self->get_linestr;
+    my $offset = $self->offset;
+    my ($str) = extract_quotelike(substr($line, $offset));
+    return unless defined $str;
+
+    substr($line, $offset, length $str) = '';
+    $self->set_linestr($line);
+
+    return \$str;
+};
 
 sub parser {
     my $self = shift;
@@ -38,45 +62,70 @@ sub parser {
     $self->skip_declarator;
     my $name   = $self->strip_name;
     my $proto  = $self->strip_proto;
-    my $attrs  = $self->strip_attrs;
-
-    my $pkg       = $self->get_curstash_name;
-    my $meth_name = defined $name ? $name : '__ANON__';
-
-    ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/
-        if $meth_name =~ /::/;
+    my $attrs  = $self->strip_attrs || '';
 
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(
-        signature    => q{(} . ($proto || '') . q{)},
-        package_name => $pkg,
-        name         => $meth_name,
+        signature => q{(} . ($proto || '') . q{)},
     );
 
+    my $after_block = q{, };
+    $after_block .= ref $name ? ${$name} : qq{q[${name}]}
+        if defined $name;
+    $after_block .= q{;};
+
     my $inject = $method->injectable_code;
-    $inject = $self->scope_injector_call() . $inject
+    $inject = $self->scope_injector_call($after_block) . $inject
         if defined $name;
 
-    $self->inject_if_block($inject, $attrs ? "sub ${attrs} " : '');
+    $self->inject_if_block($inject, "sub ${attrs} ");
+
+    my $compile_stash = $self->get_curstash_name;
 
     my $create_meta_method = sub {
-        $method->_set_actual_body(shift);
+        my ($code, $pkg, $meth_name) = @_;
+        $method->_set_actual_body($code);
+        $method->_set_package_name($pkg);
+        $method->_set_name($meth_name);
         return $method;
     };
 
     if (defined $name) {
-        $self->shadow(sub (&) {
-            my ($code) = @_;
-            my $meth = $create_meta_method->($code);
+        $self->shadow(sub {
+            my ($code, $name) = @_;
+
+            my $pkg       = $compile_stash;
+            my $meth_name = defined $name ? $name : '__ANON__';
+
+            ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/
+                if $meth_name =~ /::/;
+
+            my $meth = $create_meta_method->($code, $pkg, $meth_name);
             my $meta = Moose::Meta::Class->initialize($pkg);
             $meta->add_method($meth_name => $meth);
             return;
         });
     }
     else {
-        $self->shadow(sub (&) {
-            return $create_meta_method->(shift);
+        $self->shadow(sub {
+            return $create_meta_method->(shift, $compile_stash, '__ANON__');
         });
     }
+}
+
+sub scope_injector_call {
+    my ($self, $code) = @_;
+    return qq[BEGIN { ${\ref $self}->inject_scope('${code}') }];
+}
+
+sub inject_scope {
+    my ($class, $inject) = @_;
+    on_scope_end {
+        my $line = Devel::Declare::get_linestr();
+        return unless defined $line;
+        my $offset = Devel::Declare::get_linestr_offset();
+        substr($line, $offset, 0) = $inject;
+        Devel::Declare::set_linestr($line);
+    };
 }
 
 __PACKAGE__->meta->make_immutable;
