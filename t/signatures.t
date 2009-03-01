@@ -60,37 +60,37 @@ my @signatures;
 
     # coerce is where tests
     [
-        $ISTODO,
+        0,
         'Str $arg does coerce where { 1 } ',
         'COERCE_WHERE Positional String Type'
     ],                                                                      #29
     [
-        $ISTODO,
+        0,
         'Int $arg does coerce where { 1 } ',
         'COERCE_WHERE Positional Int Type'
     ],
     [
-        $ISTODO,
+        0,
         'Bar::Foo $arg does coerce where { 1 }',
         'COERCE_WHERE Positi Class Type'
     ],
     [
-        $ISTODO,
+        0,
         'Str :$arg does coerce where { 1 }',
         'COERCE_WHERE Named String Type'
     ],
     [
-        $ISTODO,
+        0,
         'Int :$arg does coerce where { 1 }',
         'COERCE_WHERE Named Int Type'
     ],
     [
-        $ISTODO,
+        0,
         'Bar::Foo :$arg does coerce where { 1 }',
         'COERCE_WHERE Named Class Type'
     ],
-    [ $ISTODO, ':$arg does coerce where { 1 } ', 'COERCE_WHERE Named ' ],
-    [ $ISTODO, '$arg does coerce where { 1 }',   'COERCE_WHERE Postional ' ], # 36
+    [ 0, ':$arg does coerce where { 1 } ', 'COERCE_WHERE Named ' ],
+    [ 0, '$arg does coerce where { 1 }',   'COERCE_WHERE Postional ' ], # 36
 
     # where tests
     [ 0, 'Str $arg where { 1 } ', 'WHERE Positional String Type' ],    #37
