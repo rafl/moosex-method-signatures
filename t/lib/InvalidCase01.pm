@@ -9,9 +9,10 @@ method meth1{
     if @{$_} > 3;
 }
 
-method meth2{
-{
+method meth2{ {
+  "a" "b"
 }
 
+method meth3 {}
 1;
 
