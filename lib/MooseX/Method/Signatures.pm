@@ -413,6 +413,8 @@ With contributions from:
 
 =over 4
 
+=item Hakim Cassimally E<lt>hakim.cassimally@gmail.comE<gt>
+
 =item Jonathan Scott Duff E<lt>duff@pobox.comE<gt>
 
 =item Kent Fredric E<lt>kentfredric@gmail.comE<gt>
