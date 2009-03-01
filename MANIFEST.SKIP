@@ -7,3 +7,4 @@
 ^cover_db\b
 blib\b
 ^issues\b
+^t/sigs-optional.t$
