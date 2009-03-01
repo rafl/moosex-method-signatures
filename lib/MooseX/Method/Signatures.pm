@@ -56,6 +56,7 @@ override strip_name => sub {
 };
 
 sub parser {
+    local $@; # Keep any previous compile errors from getting stepped on.
     my $self = shift;
     $self->init(@_);
 
