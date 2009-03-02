@@ -94,15 +94,13 @@ sub parser {
         $self->shadow(sub {
             my ($code, $name) = @_;
 
-            my $pkg       = $compile_stash;
-            my $meth_name = defined $name ? $name : '__ANON__';
+            my $pkg = $compile_stash;
+            ($pkg, $name) = $name =~ /^(.*)::([^:]+)$/
+                if $name =~ /::/;
 
-            ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/
-                if $meth_name =~ /::/;
-
-            my $meth = $create_meta_method->($code, $pkg, $meth_name);
+            my $meth = $create_meta_method->($code, $pkg, $name);
             my $meta = Moose::Meta::Class->initialize($pkg);
-            $meta->add_method($meth_name => $meth);
+            $meta->add_method($name => $meth);
             return;
         });
     }
