@@ -57,6 +57,7 @@ has _named_args => (
 
 has type_constraint => (
     is      => 'ro',
+    isa     => class_type('Moose::Meta::TypeConstraint'),
     lazy    => 1,
     builder => '_build_type_constraint',
 );
