@@ -5,6 +5,7 @@ use Parse::Method::Signatures;
 use Scalar::Util qw/weaken/;
 use Moose::Util qw/does_role/;
 use Moose::Util::TypeConstraints;
+use MooseX::Types::Util qw/has_available_type_export/;
 use MooseX::Types::Structured qw/Tuple Dict Optional/;
 use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef/;
 use aliased 'Parse::Method::Signatures::Param::Named';
@@ -123,10 +124,8 @@ sub _build__parsed_signature {
         input => $self->signature,
         type_constraint_callback => sub {
             my ($tc, $name) = @_;
-            my $code = $self->package_name->can($name);
-            return $code
-                ? eval { $code->() }
-                : $tc->find_registered_constraint($name);
+            return has_available_type_export($self->package_name, $name)
+                || $tc->find_registered_constraint($name);
         },
     );
 }
