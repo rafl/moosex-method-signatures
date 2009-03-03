@@ -61,9 +61,9 @@ sub parser {
     $self->init(@_);
 
     $self->skip_declarator;
-    my $name   = $self->strip_name;
-    my $proto  = $self->strip_proto;
-    my $attrs  = $self->strip_attrs || '';
+    my $name  = $self->strip_name;
+    my $proto = $self->strip_proto;
+    my $attrs = $self->strip_attrs || '';
 
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(
         signature => q{(} . ($proto || '') . q{)},
