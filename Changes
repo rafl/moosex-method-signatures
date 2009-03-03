@@ -1,3 +1,13 @@
+0.11  Tue, 03 Mar 2009 03:27:00 +0100
+  * Use MooseX::Types introspection capabilities instead of blindly executing
+    functions in other pakages.
+  * Stop mentioning the deprecated MX::Method, as requested by its author.
+  * Fix and test reporting of compile-time error message (Ash Berlin).
+  * Small stylistic whitespace changes in the docs.
+  * Test that optional params really are optional (Rhesa Rozendaal).
+  * Added test for hashref default values (Rhesa Rozendaal).
+  * Testing that eval works with semicolon insertion (Hakim Cassimally).
+
 0.10  Sat, 28 Feb 2009 19:04:02 +0100
   * Mention all contributors.
   * Update copyright notice for 2009.

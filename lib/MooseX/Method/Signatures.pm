@@ -12,7 +12,7 @@ use MooseX::Method::Signatures::Meta::Method;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 extends qw/Moose::Object Devel::Declare::MethodInstaller::Simple/;
 
