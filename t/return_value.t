@@ -29,6 +29,6 @@ my $o = bless {} => 'Foo';
     };
 
     dies_ok(sub {
-        $o->${\$meth->body}('foo');
+        my $x = $o->${\$meth->body}('foo');
     });
 }
