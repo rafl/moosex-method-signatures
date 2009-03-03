@@ -4,29 +4,17 @@ use warnings;
 package MooseX::Method::Signatures;
 
 use Moose;
-use Carp qw/croak/;
 use Devel::Declare ();
-use Parse::Method::Signatures;
+use B::Hooks::EndOfScope;
 use Moose::Meta::Class;
-use Moose::Util::TypeConstraints;
-use Moose::Util qw/does_role/;
-use MooseX::Types::Moose qw/Str Defined Maybe Object ArrayRef/;
-use MooseX::Types::Structured qw/Dict Tuple Optional/;
-use aliased 'Parse::Method::Signatures::Param::Named';
+use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = '0.09';
+our $VERSION = '0.11';
 
 extends qw/Moose::Object Devel::Declare::MethodInstaller::Simple/;
-
-has target => (
-    is       => 'ro',
-    isa      => Str,
-    init_arg => 'into',
-    required => 1,
-);
 
 sub import {
     my ($class) = @_;
@@ -37,200 +25,106 @@ sub import {
 sub setup_for {
     my ($class, $pkg) = @_;
 
-    $class->install_methodhandler(
-        into => $pkg,
-        name => 'method',
-    );
+    my $ctx = $class->new(into => $pkg);
+
+    Devel::Declare->setup_for($pkg, {
+        method => { const => sub { $ctx->parser(@_) } },
+    });
+
+    {
+        no strict 'refs';
+        *{ "${pkg}::method" } = sub {};
+    }
 
     return;
 }
 
-sub param_to_spec {
-    my ($self, $param) = @_;
+override strip_name => sub {
+    my ($self) = @_;
+    my $ret = super;
+    return $ret if defined $ret;
 
-    my $tc = Defined;
-    $tc = $param->meta_type_constraint
-        if $param->has_type_constraints;
+    my $line = $self->get_linestr;
+    my $offset = $self->offset;
+    my ($str) = extract_quotelike(substr($line, $offset));
+    return unless defined $str;
 
-    if ($param->has_constraints) {
-        my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
-        my $code = eval "sub {${cb}}";
-        $tc = subtype($tc, $code);
-    }
+    substr($line, $offset, length $str) = '';
+    $self->set_linestr($line);
 
-    my %spec;
-    $spec{tc} = $param->required
-        ? $tc
-        : does_role($param, Named)
-            ? Optional[$tc]
-            : Maybe[$tc];
-
-    $spec{default} = $param->default_value
-        if $param->has_default_value;
-
-    if ($param->has_traits) {
-        for my $trait (@{ $param->param_traits }) {
-            next unless $trait->[1] eq 'coerce';
-            $spec{coerce} = 1;
-        }
-    }
-
-    return \%spec;
-}
-
-sub parse_proto {
-    my ($self, $proto) = @_;
-    $proto ||= '';
-
-    my $vars = q{};
-    my (@named, @positional);
-
-    my $sig = Parse::Method::Signatures->signature(
-        input => "(${proto})",
-        type_constraint_callback => sub {
-            my ($tc, $name) = @_;
-            my $code = $self->target->can($name);
-            return $code
-                ? eval { $code->() }
-                : $tc->find_registered_constraint($name);
-        },
-    );
-    croak "Invalid method signature (${proto})"
-        unless $sig;
-
-    if ($sig->has_invocant) {
-        my $invocant = $sig->invocant;
-        $vars .= $invocant->variable_name . q{,};
-        push @positional, $self->param_to_spec($invocant);
-    }
-    else {
-        $vars .= '$self,';
-        push @positional, { tc => Object };
-    }
-
-    if ($sig->has_positional_params) {
-        for my $param ($sig->positional_params) {
-            $vars .= $param->variable_name . q{,};
-            push @positional, $self->param_to_spec($param);
-        }
-    }
-
-    if ($sig->has_named_params) {
-        for my $param ($sig->named_params) {
-            $vars .= $param->variable_name . q{,};
-            push @named, $param->label => $self->param_to_spec($param);
-        }
-    }
-
-    my $tc = Tuple[
-        Tuple[ map { $_->{tc}               } @positional ],
-        Dict[  map { ref $_ ? $_->{tc} : $_ } @named      ],
-    ];
-
-    my $coerce_param = sub {
-        my ($spec, $value) = @_;
-        return $value unless exists $spec->{coerce};
-        return $spec->{tc}->coerce($value);
-    };
-
-    my %named = @named;
-
-    coerce $tc,
-        from ArrayRef,
-        via {
-            my (@positional_args, %named_args);
-
-            my $i = 0;
-            for my $param (@positional) {
-                push @positional_args,
-                    $#{ $_ } < $i
-                        ? (exists $param->{default} ? $param->{default} : ())
-                        : $coerce_param->($param, $_->[$i]);
-                $i++;
-            }
-
-            unless ($#{ $_ } < $i) {
-                my %rest = @{ $_ }[$i .. $#{ $_ }];
-                while (my ($key, $spec) = each %named) {
-                    if (exists $rest{$key}) {
-                        $named_args{$key} = $coerce_param->($spec, delete $rest{$key});
-                        next;
-                    }
-
-                    if (exists $spec->{default}) {
-                        $named_args{$key} = $spec->{default};
-                    }
-                }
-
-                @named_args{keys %rest} = values %rest;
-            }
-
-            return [\@positional_args, \%named_args];
-        };
-
-    return ($sig, $vars, [@positional, @named], $tc);
-}
-
-sub inject_parsed_proto {
-    my ($self, $vars) = @_;
-    return "my (${vars}) = \@_;";
-}
+    return \$str;
+};
 
 sub parser {
+    local $@; # Keep any previous compile errors from getting stepped on.
     my $self = shift;
     $self->init(@_);
 
     $self->skip_declarator;
     my $name   = $self->strip_name;
     my $proto  = $self->strip_proto;
-    my $attrs  = $self->strip_attrs;
-    my ($sig, $vars, $param_spec, $tc) = $self->parse_proto($proto);
-    my $inject = $self->inject_parsed_proto($vars);
+    my $attrs  = $self->strip_attrs || '';
 
-    if (defined $name) {
-        $inject = $self->scope_injector_call() . $inject;
-    }
+    my $method = MooseX::Method::Signatures::Meta::Method->wrap(
+        signature => q{(} . ($proto || '') . q{)},
+    );
 
-    $self->inject_if_block($inject, $attrs ? "sub ${attrs} " : '');
+    my $after_block = q{, };
+    $after_block .= ref $name ? ${$name} : qq{q[${name}]}
+        if defined $name;
+    $after_block .= q{;};
 
-    my $pkg;
-    my $meth_name = defined $name
-        ? $name
-        : '__ANON__';
+    my $inject = $method->injectable_code;
+    $inject = $self->scope_injector_call($after_block) . $inject
+        if defined $name;
 
-    if ($meth_name =~ /::/) {
-        ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/;
-    }
-    else {
-        $pkg = $self->get_curstash_name;
-    }
+    $self->inject_if_block($inject, "sub ${attrs} ");
+
+    my $compile_stash = $self->get_curstash_name;
 
     my $create_meta_method = sub {
-        my ($code) = @_;
-        return MooseX::Method::Signatures::Meta::Method->wrap(
-            _signature      => $sig,
-            _param_spec     => $param_spec,
-            body            => $code,
-            package_name    => $pkg,
-            name            => $meth_name,
-            type_constraint => $tc,
-        );
+        my ($code, $pkg, $meth_name) = @_;
+        $method->_set_actual_body($code);
+        $method->_set_package_name($pkg);
+        $method->_set_name($meth_name);
+        return $method;
     };
 
     if (defined $name) {
-        $self->shadow(sub (&) {
-            my ($code) = @_;
-            my $meth = $create_meta_method->($code);
+        $self->shadow(sub {
+            my ($code, $name) = @_;
+
+            my $pkg = $compile_stash;
+            ($pkg, $name) = $name =~ /^(.*)::([^:]+)$/
+                if $name =~ /::/;
+
+            my $meth = $create_meta_method->($code, $pkg, $name);
             my $meta = Moose::Meta::Class->initialize($pkg);
-            $meta->add_method($meth_name => $meth);
+            $meta->add_method($name => $meth);
             return;
         });
     }
     else {
-        $self->shadow(sub (&) {
-            return $create_meta_method->(shift);
+        $self->shadow(sub {
+            return $create_meta_method->(shift, $compile_stash, '__ANON__');
         });
     }
+}
+
+sub scope_injector_call {
+    my ($self, $code) = @_;
+    return qq[BEGIN { ${\ref $self}->inject_scope('${code}') }];
+}
+
+sub inject_scope {
+    my ($class, $inject) = @_;
+    on_scope_end {
+        my $line = Devel::Declare::get_linestr();
+        return unless defined $line;
+        my $offset = Devel::Declare::get_linestr_offset();
+        substr($line, $offset, 0) = $inject;
+        Devel::Declare::set_linestr($line);
+    };
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -310,10 +204,6 @@ signature syntax is supported yet and some of it never will be.
 
     method foo ($a , $b!, :$c!, :$d!) # required
     method bar ($a?, $b?, :$c , :$d?) # optional
-
-=for later, when mx::method::signature::combined is fixed
-    method baz ($a , $b?, :$c ,  $d?) # combined
-=back
 
 =head2 Defaults
 
@@ -459,9 +349,7 @@ of the class definition. With it, our example would becomes:
     use MooseX::Declare;
 
     class Canine with Watchdog {
-
         method bark { print "Woof!\n"; }
-
     }
 
     1;
@@ -471,7 +359,6 @@ of the class definition. With it, our example would becomes:
     use MooseX::Declare;
 
     role Watchdog {
-
         requires 'bark';
 
         method warn_intruder ( $intruder ) {
@@ -495,9 +382,9 @@ method/subroutine within a role.
 
 =head1 SEE ALSO
 
-L<Method::Signatures>
+L<Method::Signatures::Simple>
 
-L<MooseX::Method>
+L<Method::Signatures>
 
 L<Perl6::Subs>
 
@@ -507,18 +394,38 @@ L<Parse::Method::Signatures>
 
 L<Moose>
 
+=head1 AUTHOR
+
+Florian Ragwitz E<lt>rafl@debian.orgE<gt>
+
+With contributions from:
+
+=over 4
+
+=item Hakim Cassimally E<lt>hakim.cassimally@gmail.comE<gt>
+
+=item Jonathan Scott Duff E<lt>duff@pobox.comE<gt>
+
+=item Kent Fredric E<lt>kentfredric@gmail.comE<gt>
+
+=item Rhesa Rozendaal E<lt>rhesa@cpan.orgE<gt>
+
+=item Ricardo SIGNES E<lt>rjbs@cpan.orgE<gt>
+
+=item Steffen Schwigon E<lt>ss5@renormalist.netE<gt>
+
+=item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
+
+=back
+
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2008  Florian Ragwitz
+Copyright (c) 2008, 2009  Florian Ragwitz
 
 Code based on the tests for L<Devel::Declare>.
 
 Documentation based on L<MooseX::Method> and L<Method::Signatures>.
 
 Licensed under the same terms as Perl itself.
-
-=head1 AUTHOR
-
-Florian Ragwitz E<lt>rafl@debian.orgE<gt>
 
 =cut

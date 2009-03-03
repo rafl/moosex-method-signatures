@@ -49,48 +49,48 @@ my @signatures;
     [ 0, '$arg does coerce',           'COERCE Postional ' ],         # 20
 
     # coerce is tests
-    [ 0, 'Str $arg is coerce',  'COERCE_IS Positional String Type' ],  #21
-    [ 0, 'Int $arg is coerce ', 'COERCE_IS Positional Int Type' ],
-    [ 0, 'Bar::Foo $arg is coerce',  'COERCE_IS Positi Class Type' ],
-    [ 0, 'Str :$arg is coerce',      'COERCE_IS Named String Type' ],
-    [ 0, 'Int :$arg is coerce',      'COERCE_IS Named Int Type' ],
-    [ 0, 'Bar::Foo :$arg is coerce', 'COERCE_IS Named Class Type' ],
-    [ 0, ':$arg is coerce',          'COERCE_IS Named ' ],
-    [ 0, '$arg is coerce',           'COERCE_IS Postional ' ],        # 28
+    [ 0, 'Str $arg does coerce',  'COERCE_IS Positional String Type' ],  #21
+    [ 0, 'Int $arg does coerce ', 'COERCE_IS Positional Int Type' ],
+    [ 0, 'Bar::Foo $arg does coerce',  'COERCE_IS Positi Class Type' ],
+    [ 0, 'Str :$arg does coerce',      'COERCE_IS Named String Type' ],
+    [ 0, 'Int :$arg does coerce',      'COERCE_IS Named Int Type' ],
+    [ 0, 'Bar::Foo :$arg does coerce', 'COERCE_IS Named Class Type' ],
+    [ 0, ':$arg does coerce',          'COERCE_IS Named ' ],
+    [ 0, '$arg does coerce',           'COERCE_IS Postional ' ],        # 28
 
     # coerce is where tests
     [
-        $ISTODO,
-        'Str $arg is coerce where { 1 } ',
+        0,
+        'Str $arg does coerce where { 1 } ',
         'COERCE_WHERE Positional String Type'
     ],                                                                      #29
     [
-        $ISTODO,
-        'Int $arg is coerce where { 1 } ',
+        0,
+        'Int $arg does coerce where { 1 } ',
         'COERCE_WHERE Positional Int Type'
     ],
     [
-        $ISTODO,
-        'Bar::Foo $arg is coerce where { 1 }',
+        0,
+        'Bar::Foo $arg does coerce where { 1 }',
         'COERCE_WHERE Positi Class Type'
     ],
     [
-        $ISTODO,
-        'Str :$arg is coerce where { 1 }',
+        0,
+        'Str :$arg does coerce where { 1 }',
         'COERCE_WHERE Named String Type'
     ],
     [
-        $ISTODO,
-        'Int :$arg is coerce where { 1 }',
+        0,
+        'Int :$arg does coerce where { 1 }',
         'COERCE_WHERE Named Int Type'
     ],
     [
-        $ISTODO,
-        'Bar::Foo :$arg is coerce where { 1 }',
+        0,
+        'Bar::Foo :$arg does coerce where { 1 }',
         'COERCE_WHERE Named Class Type'
     ],
-    [ $ISTODO, ':$arg is coerce where { 1 } ', 'COERCE_WHERE Named ' ],
-    [ $ISTODO, '$arg is coerce where { 1 }',   'COERCE_WHERE Postional ' ], # 36
+    [ 0, ':$arg does coerce where { 1 } ', 'COERCE_WHERE Named ' ],
+    [ 0, '$arg does coerce where { 1 }',   'COERCE_WHERE Postional ' ], # 36
 
     # where tests
     [ 0, 'Str $arg where { 1 } ', 'WHERE Positional String Type' ],    #37
