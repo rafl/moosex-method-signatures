@@ -15,6 +15,8 @@ requires 'MooseX::Types' => '0.09';
 requires 'MooseX::Types::Moose';
 requires 'MooseX::Types::Structured' => '0.07';
 requires 'namespace::clean';
+requires 'Task::Weaken';
+requires 'Text::Balanced';
 
 test_requires 'Test::Exception';
 
