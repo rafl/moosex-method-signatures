@@ -205,10 +205,6 @@ signature syntax is supported yet and some of it never will be.
     method foo ($a , $b!, :$c!, :$d!) # required
     method bar ($a?, $b?, :$c , :$d?) # optional
 
-=for later, when mx::method::signature::combined is fixed
-    method baz ($a , $b?, :$c ,  $d?) # combined
-=back
-
 =head2 Defaults
 
     method foo ($a = 42) # defaults to 42
