@@ -353,9 +353,7 @@ of the class definition. With it, our example would becomes:
     use MooseX::Declare;
 
     class Canine with Watchdog {
-
         method bark { print "Woof!\n"; }
-
     }
 
     1;
@@ -365,7 +363,6 @@ of the class definition. With it, our example would becomes:
     use MooseX::Declare;
 
     role Watchdog {
-
         requires 'bark';
 
         method warn_intruder ( $intruder ) {
