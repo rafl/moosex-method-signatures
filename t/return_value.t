@@ -8,7 +8,7 @@ use MooseX::Method::Signatures;
 my $o = bless {} => 'Foo';
 
 {
-    my $meth = method (Str $foo, Int $bar) returns ArrayRef[Str] {
+    my $meth = method (Str $foo, Int $bar) returns (ArrayRef[Str]) {
         return [($foo) x $bar];
     };
     isa_ok($meth, 'Moose::Meta::Method');
@@ -24,7 +24,7 @@ my $o = bless {} => 'Foo';
 }
 
 {
-    my $meth = method (Str $foo) returns Int {
+    my $meth = method (Str $foo) returns (Int) {
         return 42.5;
     };
 
