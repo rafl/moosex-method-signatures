@@ -9,6 +9,7 @@ use MooseX::Types::Util qw/has_available_type_export/;
 use MooseX::Types::Structured qw/Tuple Dict Optional/;
 use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef/;
 use aliased 'Parse::Method::Signatures::Param::Named';
+use aliased 'Parse::Method::Signatures::Param::Placeholder';
 
 use namespace::clean -except => 'meta';
 
@@ -172,13 +173,12 @@ sub _build__lexicals {
         ? $sig->invocant->variable_name
         : '$self';
 
-    if ($sig->has_positional_params) {
-        push @lexicals, $_->variable_name for $sig->positional_params;
-    }
-
-    if ($sig->has_named_params) {
-        push @lexicals, $_->variable_name for $sig->named_params;
-    }
+    push @lexicals,
+        (does_role($_, Placeholder)
+            ? 'undef'
+            : $_->variable_name)
+        for (($sig->has_positional_params ? $sig->positional_params : ()),
+             ($sig->has_named_params      ? $sig->named_params      : ()));
 
     return \@lexicals;
 }
