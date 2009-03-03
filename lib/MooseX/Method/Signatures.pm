@@ -393,8 +393,6 @@ L<Method::Signatures::Simple>
 
 L<Method::Signatures>
 
-L<MooseX::Method>
-
 L<Perl6::Subs>
 
 L<Devel::Declare>
