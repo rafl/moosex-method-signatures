@@ -1,7 +1,9 @@
 package MooseX::Method::Signatures::Meta::Method;
 
 use Moose;
+use Context::Preserve;
 use Parse::Method::Signatures;
+use Parse::Method::Signatures::TypeConstraint;
 use Scalar::Util qw/weaken/;
 use Moose::Util qw/does_role/;
 use Moose::Util::TypeConstraints;
@@ -63,6 +65,19 @@ has type_constraint => (
     builder => '_build_type_constraint',
 );
 
+has return_signature => (
+    is        => 'ro',
+    isa       => Str,
+    predicate => 'has_return_signature',
+);
+
+has _return_type_constraint => (
+    is      => 'ro',
+    isa     => class_type('Moose::Meta::TypeConstraint'),
+    lazy    => 1,
+    builder => '_build__return_type_constraint',
+);
+
 has actual_body => (
     is        => 'ro',
     isa       => CodeRef,
@@ -110,8 +125,15 @@ sub wrap {
 
     my $self;
     $self = $class->_new(%args, body => sub {
-        @_ = $self->validate(\@_);
-        goto &{ $self->actual_body };
+        my @args = $self->validate(\@_);
+        return preserve_context { $self->actual_body->(@args) }
+            after => sub {
+                if ($self->has_return_signature) {
+                    if (defined (my $msg = $self->_return_type_constraint->validate(\@_))) {
+                        confess $msg;
+                    }
+                }
+            };
     });
 
     weaken($self->{associated_metaclass})
@@ -130,6 +152,27 @@ sub _build__parsed_signature {
                 || $tc->find_registered_constraint($name);
         },
     );
+}
+
+sub _build__return_type_constraint {
+    my ($self) = @_;
+    confess 'no return type constraint'
+        unless $self->has_return_signature;
+
+    my $parser = Parse::Method::Signatures->new(
+        input => $self->return_signature,
+        type_constraint_callback => sub {
+            my ($tc, $name) = @_;
+            return has_available_type_export($self->package_name, $name)
+                || $tc->find_registered_constraint($name);
+        },
+    );
+
+    my $param = $parser->_param_typed({});
+    confess 'failed to parse return value type constraint'
+        unless exists $param->{type_constraints};
+
+    return Tuple[$param->{type_constraints}->tc];
 }
 
 sub _param_to_spec {

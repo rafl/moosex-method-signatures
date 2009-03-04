@@ -55,19 +55,30 @@ override strip_name => sub {
     return \$str;
 };
 
+sub strip_return_type_constraint {
+    my ($self) = @_;
+    my $returns = $self->strip_name;
+    return unless defined $returns;
+    confess "expected 'returns', found '${returns}'"
+        unless $returns eq 'returns';
+    return $self->strip_proto;
+}
+
 sub parser {
     local $@; # Keep any previous compile errors from getting stepped on.
     my $self = shift;
     $self->init(@_);
 
     $self->skip_declarator;
-    my $name  = $self->strip_name;
-    my $proto = $self->strip_proto;
-    my $attrs = $self->strip_attrs || '';
+    my $name   = $self->strip_name;
+    my $proto  = $self->strip_proto;
+    my $attrs  = $self->strip_attrs || '';
+    my $ret_tc = $self->strip_return_type_constraint;
 
-    my $method = MooseX::Method::Signatures::Meta::Method->wrap(
-        signature => q{(} . ($proto || '') . q{)},
-    );
+    my %args = (signature => q{(} . ($proto || '') . q{)});
+    $args{return_signature} = $ret_tc if defined $ret_tc;
+
+    my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
 
     my $after_block = q{, };
     $after_block .= ref $name ? ${$name} : qq{q[${name}]}
