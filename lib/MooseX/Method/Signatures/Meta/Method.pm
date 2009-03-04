@@ -11,6 +11,7 @@ use MooseX::Types::Util qw/has_available_type_export/;
 use MooseX::Types::Structured qw/Tuple Dict Optional/;
 use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef/;
 use aliased 'Parse::Method::Signatures::Param::Named';
+use aliased 'Parse::Method::Signatures::Param::Placeholder';
 
 use namespace::clean -except => 'meta';
 
@@ -59,6 +60,7 @@ has _named_args => (
 
 has type_constraint => (
     is      => 'ro',
+    isa     => class_type('Moose::Meta::TypeConstraint'),
     lazy    => 1,
     builder => '_build_type_constraint',
 );
@@ -215,13 +217,12 @@ sub _build__lexicals {
         ? $sig->invocant->variable_name
         : '$self';
 
-    if ($sig->has_positional_params) {
-        push @lexicals, $_->variable_name for $sig->positional_params;
-    }
-
-    if ($sig->has_named_params) {
-        push @lexicals, $_->variable_name for $sig->named_params;
-    }
+    push @lexicals,
+        (does_role($_, Placeholder)
+            ? 'undef'
+            : $_->variable_name)
+        for (($sig->has_positional_params ? $sig->positional_params : ()),
+             ($sig->has_named_params      ? $sig->named_params      : ()));
 
     return \@lexicals;
 }
@@ -292,7 +293,7 @@ sub _build_type_constraint {
             for my $param (@{ $positional }) {
                 push @positional_args,
                     $#{ $_ } < $i
-                        ? (exists $param->{default} ? $param->{default} : ())
+                        ? (exists $param->{default} ? eval $param->{default} : ())
                         : $coerce_param->($param, $_->[$i]);
                 $i++;
             }
@@ -306,7 +307,7 @@ sub _build_type_constraint {
                     }
 
                     if (exists $spec->{default}) {
-                        $named_args{$key} = $spec->{default};
+                        $named_args{$key} = eval $spec->{default};
                     }
                 }
 
