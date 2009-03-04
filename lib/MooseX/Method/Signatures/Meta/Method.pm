@@ -161,19 +161,18 @@ sub _build__return_type_constraint {
 
     my $parser = Parse::Method::Signatures->new(
         input => $self->return_signature,
-    );
-
-    my @tc = $parser->tc(1);
-    my $tc = Parse::Method::Signatures::TypeConstraint->new(
-        data => $tc[0], str => $tc[1],
-        tc_callback => sub {
+        type_constraint_callback => sub {
             my ($tc, $name) = @_;
             return has_available_type_export($self->package_name, $name)
                 || $tc->find_registered_constraint($name);
         },
     );
 
-    return Tuple[$tc->tc];
+    my $param = $parser->_param_typed({});
+    confess 'failed to parse return value type constraint'
+        unless exists $param->{type_constraints};
+
+    return Tuple[$param->{type_constraints}->tc];
 }
 
 sub _param_to_spec {
