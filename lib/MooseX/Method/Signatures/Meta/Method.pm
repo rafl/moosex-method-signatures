@@ -250,7 +250,7 @@ sub _build_type_constraint {
             for my $param (@{ $positional }) {
                 push @positional_args,
                     $#{ $_ } < $i
-                        ? (exists $param->{default} ? $param->{default} : ())
+                        ? (exists $param->{default} ? eval $param->{default} : ())
                         : $coerce_param->($param, $_->[$i]);
                 $i++;
             }
