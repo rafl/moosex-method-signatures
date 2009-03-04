@@ -264,7 +264,7 @@ sub _build_type_constraint {
                     }
 
                     if (exists $spec->{default}) {
-                        $named_args{$key} = $spec->{default};
+                        $named_args{$key} = eval $spec->{default};
                     }
                 }
 
