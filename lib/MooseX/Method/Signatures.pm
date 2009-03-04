@@ -233,6 +233,14 @@ The only currently supported trait is C<coerce>, which will attempt to coerce
 the value provided if it doesn't satisfy the requirements of the type
 constraint.
 
+=head2 Placeholders
+
+    method foo ($bar, $, $baz)
+
+Sometimes you don't care about some params you're being called with. Just put
+the bare sigil instead of a full variable name into the signature to avoid an
+extra lexical variable to be created.
+
 =head2 Complex Example
 
     method foo ( SomeClass $thing where { $_->can('stuff') }:
