@@ -91,14 +91,6 @@ before actual_body => sub {
         unless $self->_has_actual_body;
 };
 
-around package_name => sub {
-    my ($next, $self) = @_;
-    my $ret = $self->$next;
-    confess "method doesn't have a package_name yet"
-        unless defined $ret;
-    return $ret;
-};
-
 around name => sub {
     my ($next, $self) = @_;
     my $ret = $self->$next;
@@ -135,6 +127,11 @@ sub wrap {
                 }
             };
     });
+
+    # Vivify the type constraints so TC lookups happen before namespace::clean
+    # removes them
+    $self->type_constraint;
+    $self->_return_type_constraint if $self->has_return_signature;
 
     weaken($self->{associated_metaclass})
         if $self->{associated_metaclass};

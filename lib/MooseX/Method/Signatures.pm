@@ -75,7 +75,15 @@ sub parser {
     my $attrs  = $self->strip_attrs || '';
     my $ret_tc = $self->strip_return_type_constraint;
 
-    my %args = (signature => q{(} . ($proto || '') . q{)});
+    my $compile_stash = $self->get_curstash_name;
+
+    my %args = (
+      signature => q{(} . ($proto || '') . q{)},
+
+      # This might get reset later, but its where we search for exported
+      # symbols at compile time
+      package_name => $compile_stash 
+    );
     $args{return_signature} = $ret_tc if defined $ret_tc;
 
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
@@ -91,7 +99,6 @@ sub parser {
 
     $self->inject_if_block($inject, "sub ${attrs} ");
 
-    my $compile_stash = $self->get_curstash_name;
 
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name) = @_;
