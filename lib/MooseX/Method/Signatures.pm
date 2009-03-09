@@ -12,7 +12,7 @@ use MooseX::Method::Signatures::Meta::Method;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = '0.10';
+our $VERSION = '0.12';
 
 extends qw/Moose::Object Devel::Declare::MethodInstaller::Simple/;
 
@@ -55,6 +55,15 @@ override strip_name => sub {
     return \$str;
 };
 
+sub strip_return_type_constraint {
+    my ($self) = @_;
+    my $returns = $self->strip_name;
+    return unless defined $returns;
+    confess "expected 'returns', found '${returns}'"
+        unless $returns eq 'returns';
+    return $self->strip_proto;
+}
+
 sub parser {
     local $@; # Keep any previous compile errors from getting stepped on.
     my $self = shift;
@@ -64,10 +73,12 @@ sub parser {
     my $name   = $self->strip_name;
     my $proto  = $self->strip_proto;
     my $attrs  = $self->strip_attrs || '';
+    my $ret_tc = $self->strip_return_type_constraint;
 
-    my $method = MooseX::Method::Signatures::Meta::Method->wrap(
-        signature => q{(} . ($proto || '') . q{)},
-    );
+    my %args = (signature => q{(} . ($proto || '') . q{)});
+    $args{return_signature} = $ret_tc if defined $ret_tc;
+
+    my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
 
     my $after_block = q{, };
     $after_block .= ref $name ? ${$name} : qq{q[${name}]}
@@ -94,15 +105,13 @@ sub parser {
         $self->shadow(sub {
             my ($code, $name) = @_;
 
-            my $pkg       = $compile_stash;
-            my $meth_name = defined $name ? $name : '__ANON__';
+            my $pkg = $compile_stash;
+            ($pkg, $name) = $name =~ /^(.*)::([^:]+)$/
+                if $name =~ /::/;
 
-            ($pkg, $meth_name) = $meth_name =~ /^(.*)::([^:]+)$/
-                if $meth_name =~ /::/;
-
-            my $meth = $create_meta_method->($code, $pkg, $meth_name);
+            my $meth = $create_meta_method->($code, $pkg, $name);
             my $meta = Moose::Meta::Class->initialize($pkg);
-            $meta->add_method($meth_name => $meth);
+            $meta->add_method($name => $meth);
             return;
         });
     }
@@ -207,10 +216,6 @@ signature syntax is supported yet and some of it never will be.
     method foo ($a , $b!, :$c!, :$d!) # required
     method bar ($a?, $b?, :$c , :$d?) # optional
 
-=for later, when mx::method::signature::combined is fixed
-    method baz ($a , $b?, :$c ,  $d?) # combined
-=back
-
 =head2 Defaults
 
     method foo ($a = 42) # defaults to 42
@@ -238,6 +243,14 @@ signature syntax is supported yet and some of it never will be.
 The only currently supported trait is C<coerce>, which will attempt to coerce
 the value provided if it doesn't satisfy the requirements of the type
 constraint.
+
+=head2 Placeholders
+
+    method foo ($bar, $, $baz)
+
+Sometimes you don't care about some params you're being called with. Just put
+the bare sigil instead of a full variable name into the signature to avoid an
+extra lexical variable to be created.
 
 =head2 Complex Example
 
@@ -355,9 +368,7 @@ of the class definition. With it, our example would becomes:
     use MooseX::Declare;
 
     class Canine with Watchdog {
-
         method bark { print "Woof!\n"; }
-
     }
 
     1;
@@ -367,7 +378,6 @@ of the class definition. With it, our example would becomes:
     use MooseX::Declare;
 
     role Watchdog {
-
         requires 'bark';
 
         method warn_intruder ( $intruder ) {
@@ -395,8 +405,6 @@ L<Method::Signatures::Simple>
 
 L<Method::Signatures>
 
-L<MooseX::Method>
-
 L<Perl6::Subs>
 
 L<Devel::Declare>
@@ -412,6 +420,8 @@ Florian Ragwitz E<lt>rafl@debian.orgE<gt>
 With contributions from:
 
 =over 4
+
+=item Hakim Cassimally E<lt>hakim.cassimally@gmail.comE<gt>
 
 =item Jonathan Scott Duff E<lt>duff@pobox.comE<gt>
 

@@ -7,3 +7,4 @@
 ^cover_db\b
 blib\b
 ^issues\b
+^Debian_CPANTS\.txt$
