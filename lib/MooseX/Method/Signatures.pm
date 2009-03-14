@@ -9,6 +9,7 @@ use B::Hooks::EndOfScope;
 use Moose::Meta::Class;
 use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
+use Sub::Name;
 
 use namespace::clean -except => 'meta';
 
@@ -116,6 +117,7 @@ sub _parser {
 
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name) = @_;
+        subname $pkg . "::" .$meth_name, $code;
         $method->_set_actual_body($code);
         $method->_set_package_name($pkg);
         $method->_set_name($meth_name);
