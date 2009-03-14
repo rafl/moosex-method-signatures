@@ -115,18 +115,28 @@ sub wrap {
     $args{actual_body} = delete $args{body}
         if exists $args{body};
 
-    my $self;
-    $self = $class->_new(%args, body => sub {
-        my @args = $self->validate(\@_);
-        return preserve_context { $self->actual_body->(@args) }
-            after => sub {
-                if ($self->has_return_signature) {
+    my ($to_wrap, $self);
+
+    if (exists $args{return_signature}) {
+        $to_wrap = sub {
+            my @args = $self->validate(\@_);
+            return preserve_context { $self->actual_body->(@args) }
+                after => sub {
                     if (defined (my $msg = $self->_return_type_constraint->validate(\@_))) {
                         confess $msg;
                     }
-                }
-            };
-    });
+                };
+        };
+    } else {
+        my $actual_body;
+        $to_wrap = sub {
+            @_ = $self->validate(\@_);
+            $actual_body ||= $self->actual_body;
+            goto &{ $actual_body };
+        }
+    }
+
+    $self = $class->_new(%args, body => $to_wrap );
 
     # Vivify the type constraints so TC lookups happen before namespace::clean
     # removes them
