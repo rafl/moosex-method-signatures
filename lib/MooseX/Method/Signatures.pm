@@ -458,6 +458,8 @@ With contributions from:
 
 =item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
 
+=item Ash Berlin <ash@cpan.org>
+
 =back
 
 =head1 COPYRIGHT AND LICENSE
