@@ -65,7 +65,21 @@ sub strip_return_type_constraint {
 }
 
 sub parser {
-    local $@; # Keep any previous compile errors from getting stepped on.
+    my $self = shift;
+    my $err;
+
+    # Keep any previous compile errors from getting stepped on. But report 
+    # errors from inside MXMS nicely.
+    {
+        local $@; 
+        eval { $self->_parser(@_) };
+        $err = $@;
+    }
+
+    die $err if $err;
+}
+
+sub _parser {
     my $self = shift;
     $self->init(@_);
 
