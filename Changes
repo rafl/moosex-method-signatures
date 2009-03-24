@@ -1,4 +1,7 @@
+
+
   * Fix bug with namespace::clean and MooseX::Types (Ash Berlin)
+  * Rename methods to remove __ANON__ from callstack
 
 0.12  Wed, 04 Mar 2009 03:05:19 +0100
   * Implement and test scalar placeholder values.
