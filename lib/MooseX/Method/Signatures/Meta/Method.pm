@@ -153,11 +153,7 @@ sub _build__parsed_signature {
     my ($self) = @_;
     return Parse::Method::Signatures->signature(
         input => $self->signature,
-        type_constraint_callback => sub {
-            my ($tc, $name) = @_;
-            return has_available_type_export($self->package_name, $name)
-                || $tc->find_registered_constraint($name);
-        },
+        from_namespace => $self->package_name,
     );
 }
 
@@ -168,11 +164,7 @@ sub _build__return_type_constraint {
 
     my $parser = Parse::Method::Signatures->new(
         input => $self->return_signature,
-        type_constraint_callback => sub {
-            my ($tc, $name) = @_;
-            return has_available_type_export($self->package_name, $name)
-                || $tc->find_registered_constraint($name);
-        },
+        from_namespace => $self->package_name,
     );
 
     my $param = $parser->_param_typed({});
