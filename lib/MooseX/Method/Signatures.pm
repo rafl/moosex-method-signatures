@@ -10,6 +10,7 @@ use Moose::Meta::Class;
 use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
 use Sub::Name;
+use Carp;
 
 use namespace::clean -except => 'meta';
 
@@ -134,6 +135,11 @@ sub _parser {
 
             my $meth = $create_meta_method->($code, $pkg, $name);
             my $meta = Moose::Meta::Class->initialize($pkg);
+            my $meta_meth;
+            if (($meta_meth = $meta->get_method($name)) &&
+                $meta_meth->isa('MooseX::Method::Signatures::Meta::Method')) {
+              carp "Method $name redefined on package $pkg";
+            }
             $meta->add_method($name => $meth);
             return;
         });

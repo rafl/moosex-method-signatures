@@ -1,9 +1,10 @@
+Version history for MooseX::Method::Signatures
 
-
-  * Fix bug with namespace::clean and MooseX::Types (Ash Berlin)
-  * Rename methods to remove __ANON__ from callstack
-  * Port to using 'from_namespace' from Parse::Method::Signatures 1.003003
-  * Ensure errors from type constraints are reporting from the right place
+  * Fix bug with namespace::clean and MooseX::Types. (Ash Berlin)
+  * Rename methods to remove __ANON__ from callstack.
+  * Port to using 'from_namespace' from Parse::Method::Signatures 1.003003.
+  * Ensure errors from type constraints are reporting from the right place.
+  * Now warns if you try to refdefine a method.
 
 0.12  Wed, 04 Mar 2009 03:05:19 +0100
   * Implement and test scalar placeholder values.

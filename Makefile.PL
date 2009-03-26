@@ -8,7 +8,7 @@ all_from 'lib/MooseX/Method/Signatures.pm';
 requires 'aliased';
 requires 'B::Hooks::EndOfScope' => '0.07';
 requires 'Context::Preserve';
-requires 'Parse::Method::Signatures' => '1.003003';
+requires 'Parse::Method::Signatures' => '1.003004';
 requires 'Devel::Declare' => '0.003004';
 requires 'Moose::Util::TypeConstraints';
 requires 'Moose';

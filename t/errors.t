@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 4;
+use Test::More tests => 6;
 use Test::Exception;
 
 use FindBin;
@@ -18,3 +18,14 @@ ok($@, "Got an error");
 like($@, 
      qr/'SomeRandomTCThatDoesntExist' could not be parsed to a type constraint .*? at .*?\bInvalidCase02.pm line 5$/m,
      "Sane error message for invalid TC");
+
+
+{
+  my $warnings = "";
+  local $SIG{__WARN__} = sub { $warnings .= $_[0] };
+
+  eval "use Redefined;";
+  is($@, '', "No error");
+  like($warnings, qr/^Method meth1 redefined on package main at .*?\bRedefined.pm line 9$/,
+       "Redefined method warning");
+}
