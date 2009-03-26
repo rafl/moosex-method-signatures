@@ -27,4 +27,8 @@ bugtracker 'http://rt.cpan.org/Public/Dist/Display.html?Name=MooseX-Method-Signa
 
 extra_tests();
 
+if ($Module::Install::AUTHOR) {
+  system('pod2text lib/MooseX/Method/Signatures.pm > README');
+}
+
 WriteAll;
