@@ -11,6 +11,7 @@ Version history for MooseX::Method::Signatures
 
     This will be documented in the pod once we are happy with the exact
     behaviour. See t/return_value.t for examples for now.
+  * Depend upon Parse::Method::Signatures 1.003004 for better error reporting
 
 0.12  Wed, 04 Mar 2009 03:05:19 +0100
   * Implement and test scalar placeholder values.
