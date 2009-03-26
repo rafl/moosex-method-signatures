@@ -5,6 +5,12 @@ Version history for MooseX::Method::Signatures
   * Port to using 'from_namespace' from Parse::Method::Signatures 1.003003.
   * Ensure errors from type constraints are reporting from the right place.
   * Now warns if you try to refdefine a method.
+  * Return values can now be enforced by using
+
+      method foo ($x) returns (ArrayRef) { }
+
+    This will be documented in the pod once we are happy with the exact
+    behaviour. See t/return_value.t for examples for now.
 
 0.12  Wed, 04 Mar 2009 03:05:19 +0100
   * Implement and test scalar placeholder values.
