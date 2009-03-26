@@ -178,8 +178,14 @@ sub _param_to_spec {
     my ($self, $param) = @_;
 
     my $tc = Defined;
-    $tc = $param->meta_type_constraint
-        if $param->has_type_constraints;
+    {
+        # Ensure errors get reported from the right place
+        local $Carp::Internal{'MooseX::Method::Signatures::Meta::Method'} = 1;
+        local $Carp::Internal{'MooseX::Method::Signatures'} = 1;
+        local $Carp::Internal{'Devel::Declare'} = 1;
+        $tc = $param->meta_type_constraint
+          if $param->has_type_constraints;
+    }
 
     if ($param->has_constraints) {
         my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
