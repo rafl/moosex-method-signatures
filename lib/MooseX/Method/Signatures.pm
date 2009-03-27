@@ -136,9 +136,10 @@ sub _parser {
             my $meth = $create_meta_method->($code, $pkg, $name);
             my $meta = Moose::Meta::Class->initialize($pkg);
             my $meta_meth;
-            if (($meta_meth = $meta->get_method($name)) &&
+            if (warnings::enabled("redefine") &&
+                ($meta_meth = $meta->get_method($name)) &&
                 $meta_meth->isa('MooseX::Method::Signatures::Meta::Method')) {
-              carp "Method $name redefined on package $pkg";
+              warnings::warn("redefine", "Method $name redefined on package $pkg");
             }
             $meta->add_method($name => $meth);
             return;
