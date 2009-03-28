@@ -1,5 +1,6 @@
 Version history for MooseX::Method::Signatures
 
+0.13  Sat, 28 Mar 2009 11:16:39 +0000
   * Fix bug with namespace::clean and MooseX::Types. (Ash Berlin)
   * Rename methods to remove __ANON__ from callstack.
   * Port to using 'from_namespace' from Parse::Method::Signatures 1.003003.
