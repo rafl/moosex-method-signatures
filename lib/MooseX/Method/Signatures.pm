@@ -14,7 +14,7 @@ use Carp;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 extends qw/Moose::Object Devel::Declare::MethodInstaller::Simple/;
 
