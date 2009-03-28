@@ -48,8 +48,12 @@ override strip_name => sub {
 
     my $line = $self->get_linestr;
     my $offset = $self->offset;
+    local $@;
     my ($str) = extract_quotelike(substr($line, $offset));
     return unless defined $str;
+
+    return if ($@ && $@ =~ /^No quotelike operator found/);
+    die $@ if $@;
 
     substr($line, $offset, length $str) = '';
     $self->set_linestr($line);

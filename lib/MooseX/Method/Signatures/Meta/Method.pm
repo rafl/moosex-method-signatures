@@ -181,6 +181,8 @@ sub _param_to_spec {
     {
         # Ensure errors get reported from the right place
         local $Carp::Internal{'MooseX::Method::Signatures::Meta::Method'} = 1;
+        local $Carp::Internal{'Moose::Meta::Method::Delegation'} = 1;
+        local $Carp::Internal{'Moose::Meta::Method::Accessor'} = 1;
         local $Carp::Internal{'MooseX::Method::Signatures'} = 1;
         local $Carp::Internal{'Devel::Declare'} = 1;
         $tc = $param->meta_type_constraint
