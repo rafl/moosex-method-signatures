@@ -123,7 +123,7 @@ sub wrap {
             return preserve_context { $self->actual_body->(@args) }
                 after => sub {
                     if (defined (my $msg = $self->_return_type_constraint->validate(\@_))) {
-                        confess $msg;
+                        confess $msg unless $msg eq '1';
                     }
                 };
         };
@@ -337,7 +337,7 @@ sub validate {
         if $coerced == $args;
 
     if (defined (my $msg = $self->type_constraint->validate($coerced))) {
-        confess $msg;
+        confess $msg unless $msg eq '1';
     }
 
     return @{ $coerced->[0] }, map { $coerced->[1]->{$_} } @named;
