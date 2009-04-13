@@ -7,6 +7,7 @@ use Parse::Method::Signatures::TypeConstraint;
 use Scalar::Util qw/weaken/;
 use Moose::Util qw/does_role/;
 use Moose::Util::TypeConstraints;
+use MooseX::Meta::TypeConstraint::ForceCoercion;
 use MooseX::Types::Util qw/has_available_type_export/;
 use MooseX::Types::Structured qw/Tuple Dict Optional/;
 use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef/;
@@ -324,7 +325,9 @@ sub _build_type_constraint {
             return [\@positional_args, \%named_args];
         };
 
-    return $tc;
+    return MooseX::Meta::TypeConstraint::ForceCoercion->new(
+        type_constraint => $tc,
+    );
 }
 
 sub validate {
@@ -332,11 +335,8 @@ sub validate {
 
     my @named = grep { !ref $_ } @{ $self->_named_args };
 
-    my $coerced = $self->type_constraint->coerce($args);
-    confess 'failed to coerce'
-        if $coerced == $args;
-
-    if (defined (my $msg = $self->type_constraint->validate($coerced))) {
+    my $coerced;
+    if (defined (my $msg = $self->type_constraint->validate($args, \$coerced))) {
         confess $msg;
     }
 
