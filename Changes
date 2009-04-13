@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.15  Mon, 13 Apr 2009 04:32:25 +0200
+  * Use MooseX::Meta::TypeConstraint::ForceCoercion instead of forcing coercion
+    manually on validation to make reusing the method type constraints easier.
+
 0.14  Wed, 08 Apr 2009 03:45:50 +0200
   * Depend on MooseX::Types::Structured 0.11. 0.10 had a bug which caused
     validation to always fail.
