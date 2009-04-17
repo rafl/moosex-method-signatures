@@ -9,10 +9,12 @@ use B::Hooks::EndOfScope;
 use Moose::Meta::Class;
 use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
+use Sub::Name;
+use Carp;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = '0.11';
+our $VERSION = '0.15';
 
 extends qw/Moose::Object Devel::Declare::MethodInstaller::Simple/;
 
@@ -46,8 +48,12 @@ override strip_name => sub {
 
     my $line = $self->get_linestr;
     my $offset = $self->offset;
+    local $@;
     my ($str) = extract_quotelike(substr($line, $offset));
     return unless defined $str;
+
+    return if ($@ && $@ =~ /^No quotelike operator found/);
+    die $@ if $@;
 
     substr($line, $offset, length $str) = '';
     $self->set_linestr($line);
@@ -55,8 +61,31 @@ override strip_name => sub {
     return \$str;
 };
 
+sub strip_return_type_constraint {
+    my ($self) = @_;
+    my $returns = $self->strip_name;
+    return unless defined $returns;
+    confess "expected 'returns', found '${returns}'"
+        unless $returns eq 'returns';
+    return $self->strip_proto;
+}
+
 sub parser {
-    local $@; # Keep any previous compile errors from getting stepped on.
+    my $self = shift;
+    my $err;
+
+    # Keep any previous compile errors from getting stepped on. But report 
+    # errors from inside MXMS nicely.
+    {
+        local $@; 
+        eval { $self->_parser(@_) };
+        $err = $@;
+    }
+
+    die $err if $err;
+}
+
+sub _parser {
     my $self = shift;
     $self->init(@_);
 
@@ -64,10 +93,20 @@ sub parser {
     my $name   = $self->strip_name;
     my $proto  = $self->strip_proto;
     my $attrs  = $self->strip_attrs || '';
+    my $ret_tc = $self->strip_return_type_constraint;
 
-    my $method = MooseX::Method::Signatures::Meta::Method->wrap(
-        signature => q{(} . ($proto || '') . q{)},
+    my $compile_stash = $self->get_curstash_name;
+
+    my %args = (
+      signature => q{(} . ($proto || '') . q{)},
+
+      # This might get reset later, but its where we search for exported
+      # symbols at compile time
+      package_name => $compile_stash 
     );
+    $args{return_signature} = $ret_tc if defined $ret_tc;
+
+    my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
 
     my $after_block = q{, };
     $after_block .= ref $name ? ${$name} : qq{q[${name}]}
@@ -80,10 +119,10 @@ sub parser {
 
     $self->inject_if_block($inject, "sub ${attrs} ");
 
-    my $compile_stash = $self->get_curstash_name;
 
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name) = @_;
+        subname $pkg . "::" .$meth_name, $code;
         $method->_set_actual_body($code);
         $method->_set_package_name($pkg);
         $method->_set_name($meth_name);
@@ -100,6 +139,12 @@ sub parser {
 
             my $meth = $create_meta_method->($code, $pkg, $name);
             my $meta = Moose::Meta::Class->initialize($pkg);
+            my $meta_meth;
+            if (warnings::enabled("redefine") &&
+                ($meta_meth = $meta->get_method($name)) &&
+                $meta_meth->isa('MooseX::Method::Signatures::Meta::Method')) {
+              warnings::warn("redefine", "Method $name redefined on package $pkg");
+            }
             $meta->add_method($name => $meth);
             return;
         });
@@ -232,6 +277,14 @@ signature syntax is supported yet and some of it never will be.
 The only currently supported trait is C<coerce>, which will attempt to coerce
 the value provided if it doesn't satisfy the requirements of the type
 constraint.
+
+=head2 Placeholders
+
+    method foo ($bar, $, $baz)
+
+Sometimes you don't care about some params you're being called with. Just put
+the bare sigil instead of a full variable name into the signature to avoid an
+extra lexical variable to be created.
 
 =head2 Complex Example
 
@@ -415,6 +468,8 @@ With contributions from:
 =item Steffen Schwigon E<lt>ss5@renormalist.netE<gt>
 
 =item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
+
+=item Ash Berlin <ash@cpan.org>
 
 =back
 

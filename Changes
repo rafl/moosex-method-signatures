@@ -1,3 +1,35 @@
+Version history for MooseX::Method::Signatures
+
+0.15  Mon, 13 Apr 2009 04:32:25 +0200
+  * Use MooseX::Meta::TypeConstraint::ForceCoercion instead of forcing coercion
+    manually on validation to make reusing the method type constraints easier.
+
+0.14  Wed, 08 Apr 2009 03:45:50 +0200
+  * Depend on MooseX::Types::Structured 0.11. 0.10 had a bug which caused
+    validation to always fail.
+
+0.13  Sat, 28 Mar 2009 13:04:36 +0000
+  * Fix bug with namespace::clean and MooseX::Types. (Ash Berlin)
+  * Rename methods to remove __ANON__ from callstack.
+  * Port to using 'from_namespace' from Parse::Method::Signatures 1.003003.
+  * Ensure errors from type constraints are reporting from the right place.
+  * Now warns if you try to refdefine a method.
+  * Return values can now be enforced by using
+
+      method foo ($x) returns (ArrayRef) { }
+
+    This will be documented in the pod once we are happy with the exact
+    behaviour. See t/return_value.t for examples for now.
+  * Depend upon Parse::Method::Signatures 1.003004 for better error reporting
+  * Fix a bug in methods with attributes on perl 5.8.7
+  * Fix bug in location of errors with older Mooses
+  * Bump minium Moose dep to 0.63
+
+0.12  Wed, 04 Mar 2009 03:05:19 +0100
+  * Implement and test scalar placeholder values.
+  * Eval default value so reference and string defaults work as expected.
+  * Make the testsuite less noisy.
+
 0.11  Tue, 03 Mar 2009 03:27:00 +0100
   * Use MooseX::Types introspection capabilities instead of blindly executing
     functions in other pakages.

@@ -1,14 +1,18 @@
 package MooseX::Method::Signatures::Meta::Method;
 
 use Moose;
+use Context::Preserve;
 use Parse::Method::Signatures;
+use Parse::Method::Signatures::TypeConstraint;
 use Scalar::Util qw/weaken/;
 use Moose::Util qw/does_role/;
 use Moose::Util::TypeConstraints;
+use MooseX::Meta::TypeConstraint::ForceCoercion;
 use MooseX::Types::Util qw/has_available_type_export/;
 use MooseX::Types::Structured qw/Tuple Dict Optional/;
 use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef/;
 use aliased 'Parse::Method::Signatures::Param::Named';
+use aliased 'Parse::Method::Signatures::Param::Placeholder';
 
 use namespace::clean -except => 'meta';
 
@@ -57,8 +61,22 @@ has _named_args => (
 
 has type_constraint => (
     is      => 'ro',
+    isa     => class_type('Moose::Meta::TypeConstraint'),
     lazy    => 1,
     builder => '_build_type_constraint',
+);
+
+has return_signature => (
+    is        => 'ro',
+    isa       => Str,
+    predicate => 'has_return_signature',
+);
+
+has _return_type_constraint => (
+    is      => 'ro',
+    isa     => class_type('Moose::Meta::TypeConstraint'),
+    lazy    => 1,
+    builder => '_build__return_type_constraint',
 );
 
 has actual_body => (
@@ -72,14 +90,6 @@ before actual_body => sub {
     my ($self) = @_;
     confess "method doesn't have an actual body yet"
         unless $self->_has_actual_body;
-};
-
-around package_name => sub {
-    my ($next, $self) = @_;
-    my $ret = $self->$next;
-    confess "method doesn't have a package_name yet"
-        unless defined $ret;
-    return $ret;
 };
 
 around name => sub {
@@ -106,11 +116,33 @@ sub wrap {
     $args{actual_body} = delete $args{body}
         if exists $args{body};
 
-    my $self;
-    $self = $class->_new(%args, body => sub {
-        @_ = $self->validate(\@_);
-        goto &{ $self->actual_body };
-    });
+    my ($to_wrap, $self);
+
+    if (exists $args{return_signature}) {
+        $to_wrap = sub {
+            my @args = $self->validate(\@_);
+            return preserve_context { $self->actual_body->(@args) }
+                after => sub {
+                    if (defined (my $msg = $self->_return_type_constraint->validate(\@_))) {
+                        confess $msg;
+                    }
+                };
+        };
+    } else {
+        my $actual_body;
+        $to_wrap = sub {
+            @_ = $self->validate(\@_);
+            $actual_body ||= $self->actual_body;
+            goto &{ $actual_body };
+        }
+    }
+
+    $self = $class->_new(%args, body => $to_wrap );
+
+    # Vivify the type constraints so TC lookups happen before namespace::clean
+    # removes them
+    $self->type_constraint;
+    $self->_return_type_constraint if $self->has_return_signature;
 
     weaken($self->{associated_metaclass})
         if $self->{associated_metaclass};
@@ -122,20 +154,41 @@ sub _build__parsed_signature {
     my ($self) = @_;
     return Parse::Method::Signatures->signature(
         input => $self->signature,
-        type_constraint_callback => sub {
-            my ($tc, $name) = @_;
-            return has_available_type_export($self->package_name, $name)
-                || $tc->find_registered_constraint($name);
-        },
+        from_namespace => $self->package_name,
     );
+}
+
+sub _build__return_type_constraint {
+    my ($self) = @_;
+    confess 'no return type constraint'
+        unless $self->has_return_signature;
+
+    my $parser = Parse::Method::Signatures->new(
+        input => $self->return_signature,
+        from_namespace => $self->package_name,
+    );
+
+    my $param = $parser->_param_typed({});
+    confess 'failed to parse return value type constraint'
+        unless exists $param->{type_constraints};
+
+    return Tuple[$param->{type_constraints}->tc];
 }
 
 sub _param_to_spec {
     my ($self, $param) = @_;
 
     my $tc = Defined;
-    $tc = $param->meta_type_constraint
-        if $param->has_type_constraints;
+    {
+        # Ensure errors get reported from the right place
+        local $Carp::Internal{'MooseX::Method::Signatures::Meta::Method'} = 1;
+        local $Carp::Internal{'Moose::Meta::Method::Delegation'} = 1;
+        local $Carp::Internal{'Moose::Meta::Method::Accessor'} = 1;
+        local $Carp::Internal{'MooseX::Method::Signatures'} = 1;
+        local $Carp::Internal{'Devel::Declare'} = 1;
+        $tc = $param->meta_type_constraint
+          if $param->has_type_constraints;
+    }
 
     if ($param->has_constraints) {
         my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
@@ -172,13 +225,12 @@ sub _build__lexicals {
         ? $sig->invocant->variable_name
         : '$self';
 
-    if ($sig->has_positional_params) {
-        push @lexicals, $_->variable_name for $sig->positional_params;
-    }
-
-    if ($sig->has_named_params) {
-        push @lexicals, $_->variable_name for $sig->named_params;
-    }
+    push @lexicals,
+        (does_role($_, Placeholder)
+            ? 'undef'
+            : $_->variable_name)
+        for (($sig->has_positional_params ? $sig->positional_params : ()),
+             ($sig->has_named_params      ? $sig->named_params      : ()));
 
     return \@lexicals;
 }
@@ -249,7 +301,7 @@ sub _build_type_constraint {
             for my $param (@{ $positional }) {
                 push @positional_args,
                     $#{ $_ } < $i
-                        ? (exists $param->{default} ? $param->{default} : ())
+                        ? (exists $param->{default} ? eval $param->{default} : ())
                         : $coerce_param->($param, $_->[$i]);
                 $i++;
             }
@@ -263,7 +315,7 @@ sub _build_type_constraint {
                     }
 
                     if (exists $spec->{default}) {
-                        $named_args{$key} = $spec->{default};
+                        $named_args{$key} = eval $spec->{default};
                     }
                 }
 
@@ -273,7 +325,9 @@ sub _build_type_constraint {
             return [\@positional_args, \%named_args];
         };
 
-    return $tc;
+    return MooseX::Meta::TypeConstraint::ForceCoercion->new(
+        type_constraint => $tc,
+    );
 }
 
 sub validate {
@@ -281,11 +335,8 @@ sub validate {
 
     my @named = grep { !ref $_ } @{ $self->_named_args };
 
-    my $coerced = $self->type_constraint->coerce($args);
-    confess 'failed to coerce'
-        if $coerced == $args;
-
-    if (defined (my $msg = $self->type_constraint->validate($coerced))) {
+    my $coerced;
+    if (defined (my $msg = $self->type_constraint->validate($args, \$coerced))) {
         confess $msg;
     }
 

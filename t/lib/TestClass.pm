@@ -36,6 +36,15 @@ method combined ($a, $b, $c?, :$optional, :$required!) {
     return ($a, $b, $c, $optional, $required);
 }
 
+
+method callstack_inner (ClassName $class:) {
+    return Carp::longmess("Callstack is");
+}
+
+method callstack (ClassName $class:) {
+    return $class->callstack_inner;
+}
+
 BEGIN {
     class_type 'MyType';
 
