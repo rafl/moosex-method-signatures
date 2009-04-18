@@ -74,10 +74,10 @@ sub parser {
     my $self = shift;
     my $err;
 
-    # Keep any previous compile errors from getting stepped on. But report 
+    # Keep any previous compile errors from getting stepped on. But report
     # errors from inside MXMS nicely.
     {
-        local $@; 
+        local $@;
         eval { $self->_parser(@_) };
         $err = $@;
     }
@@ -102,7 +102,7 @@ sub _parser {
 
       # This might get reset later, but its where we search for exported
       # symbols at compile time
-      package_name => $compile_stash 
+      package_name => $compile_stash,
     );
     $args{return_signature} = $ret_tc if defined $ret_tc;
 
