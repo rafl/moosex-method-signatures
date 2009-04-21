@@ -15,7 +15,7 @@ requires 'Moose' => '0.63';
 requires 'MooseX::Meta::TypeConstraint::ForceCoercion';
 requires 'MooseX::Types' => '0.09';
 requires 'MooseX::Types::Moose';
-requires 'MooseX::Types::Structured' => '0.11';
+requires 'MooseX::Types::Structured' => '0.12';
 requires 'namespace::clean';
 requires 'Sub::Name';
 requires 'Task::Weaken';
