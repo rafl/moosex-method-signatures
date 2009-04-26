@@ -225,7 +225,7 @@ This is B<ALPHA SOFTWARE>. Use at your own risk. Features may change.
 
 =head1 DESCRIPTION
 
-Provides a proper method keyword, like "sub" but specificly for making methods
+Provides a proper method keyword, like "sub" but specifically for making methods
 and validating their arguments against Moose type constraints.
 
 =head1 SIGNATURE SYNTAX
@@ -289,7 +289,7 @@ extra lexical variable to be created.
 =head2 Complex Example
 
     method foo ( SomeClass $thing where { $_->can('stuff') }:
-                 Str  $bar  = "apan"
+                 Str  $bar  = "apan",
                  Int :$baz! = 42 where { $_ % 2 == 0 } where { $_ > 10 } )
 
     # the invocant is called $thing, must be an instance of SomeClass and
@@ -321,7 +321,7 @@ does not depend on a source filter. As such, it doesn't try to parse and
 rewrite your source code and there should be no weird side effects.
 
 Devel::Declare only effects compilation. After that, it's a normal subroutine.
-As such, for all that hairy magic, this module is surprisnigly stable.
+As such, for all that hairy magic, this module is surprisingly stable.
 
 =head2 What about regular subroutines?
 
