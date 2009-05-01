@@ -1,5 +1,13 @@
 Version history for MooseX::Method::Signatures
 
+0.16  Fri, 01 May 2009 08:03:44 +0200
+  * Bump prereq to Types::Structured to avoid warnings on new Moose versions.
+  * Make sure the method keyword is "tight" enough, so
+    "@methods = (method { }, method { });" works.
+  * Implement non-scalar parameters.
+  * Updated documentation.
+  * Fix a couple of POD nits (Matt Kraai).
+
 0.15  Mon, 13 Apr 2009 04:32:25 +0200
   * Use MooseX::Meta::TypeConstraint::ForceCoercion instead of forcing coercion
     manually on validation to make reusing the method type constraints easier.
