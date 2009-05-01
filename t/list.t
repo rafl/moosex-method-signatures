@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 13;
+use Test::More tests => 15;
 use Test::Exception;
 use MooseX::Method::Signatures;
 
@@ -45,6 +45,20 @@ my $o = bless {} => 'Foo';
 
     throws_ok(sub {
         $o->${\$meth->body}('foo', 42, 'moo', 13);
+    }, qr/Validation failed/);
+}
+
+{
+    my $meth = method (ArrayRef[Int] @foo) {
+        return join q{,}, map { @{ $_ } } @foo;
+    };
+
+    lives_and(sub {
+        is($o->${\$meth->body}([42, 23], [12], [18]), '42,23,12,18');
+    });
+
+    throws_ok(sub {
+        $o->${\$meth->body}([42, 23], 12, [18]);
     }, qr/Validation failed/);
 }
 
