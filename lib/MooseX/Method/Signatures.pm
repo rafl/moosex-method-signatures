@@ -317,7 +317,10 @@ As such, for all that hairy magic, this module is surprisingly stable.
 
 =head2 What about regular subroutines?
 
-L<Devel::Declare> cannot yet change the way C<sub> behaves.
+L<Devel::Declare> cannot yet change the way C<sub> behaves. However, the
+L<signatures|signatures> module can. Right now it only provides very basic
+signatures, but it's extendable enough that plugging MooseX::Method::Signatures
+signatures into that should be quite possible.
 
 =head2 What about the return value?
 
