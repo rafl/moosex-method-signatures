@@ -468,7 +468,7 @@ With contributions from:
 
 =item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
 
-=item Ash Berlin <ash@cpan.org>
+=item Ash Berlin E<lt>ash@cpan.orgE<gt>
 
 =item Matt Kraai E<lt>kraai@ftbfs.orgE<gt>
 
