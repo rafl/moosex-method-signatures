@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 9;
+use Test::More tests => 10;
 use Test::Exception;
 use MooseX::Method::Signatures;
 
@@ -30,3 +30,6 @@ for my $meth (@meths) {
 
 eval 'my $meth = method (:$foo, :@bar) { }';
 like $@, qr/arrays or hashes cannot be named/i;
+
+eval 'my $meth = method ($foo, @bar, :$baz) { }';
+like $@, qr/named parameters can not be combined with slurpy positionals/i;
