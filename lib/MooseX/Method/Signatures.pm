@@ -454,11 +454,15 @@ With contributions from:
 
 =over 4
 
+=item Ash Berlin E<lt>ash@cpan.orgE<gt>
+
 =item Hakim Cassimally E<lt>hakim.cassimally@gmail.comE<gt>
 
 =item Jonathan Scott Duff E<lt>duff@pobox.comE<gt>
 
 =item Kent Fredric E<lt>kentfredric@gmail.comE<gt>
+
+=item Matt Kraai E<lt>kraai@ftbfs.orgE<gt>
 
 =item Rhesa Rozendaal E<lt>rhesa@cpan.orgE<gt>
 
@@ -467,10 +471,6 @@ With contributions from:
 =item Steffen Schwigon E<lt>ss5@renormalist.netE<gt>
 
 =item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
-
-=item Ash Berlin E<lt>ash@cpan.orgE<gt>
-
-=item Matt Kraai E<lt>kraai@ftbfs.orgE<gt>
 
 =back
 
