@@ -324,8 +324,12 @@ signatures into that should be quite possible.
 
 =head2 What about the return value?
 
-Currently there is no support for types or declaring the type of the return
-value.
+Type constraints for return values can be declared using
+
+  method foo (Int $x, Str $y) returns Bool { ... }
+
+however, this feature only works with scalar return values and is still
+considered to be experimental.
 
 =head2 Interaction with L<Moose::Role>
 
