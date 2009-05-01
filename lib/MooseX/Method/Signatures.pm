@@ -108,16 +108,17 @@ sub _parser {
 
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
 
-    my $after_block = q{, };
-    $after_block .= ref $name ? ${$name} : qq{q[${name}]}
-        if defined $name;
-    $after_block .= q{;};
+    my $after_block = ')';
+
+    if (defined $name) {
+        my $name_arg = q{, } . (ref $name ? ${$name} : qq{q[${name}]});
+        $after_block = $name_arg . $after_block . q{;};
+    }
 
     my $inject = $method->injectable_code;
-    $inject = $self->scope_injector_call($after_block) . $inject
-        if defined $name;
+    $inject = $self->scope_injector_call($after_block) . $inject;
 
-    $self->inject_if_block($inject, "sub ${attrs} ");
+    $self->inject_if_block($inject, "(sub ${attrs} ");
 
 
     my $create_meta_method = sub {
