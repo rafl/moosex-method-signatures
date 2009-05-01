@@ -306,10 +306,6 @@ extra lexical variable to be created.
 L<Parse::Method::Signatures> is used to parse the signatures. However, some
 signatures that can be parsed by it aren't supported by this module (yet).
 
-=head2 Debugging
-
-This totally breaks the debugger.  Will have to wait on Devel::Declare fixes.
-
 =head2 No source filter
 
 While this module does rely on the hairy black magic of L<Devel::Declare> it
