@@ -9,8 +9,8 @@ use Moose::Util qw/does_role/;
 use Moose::Util::TypeConstraints;
 use MooseX::Meta::TypeConstraint::ForceCoercion;
 use MooseX::Types::Util qw/has_available_type_export/;
-use MooseX::Types::Structured qw/Tuple Dict Optional/;
-use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef/;
+use MooseX::Types::Structured qw/Tuple Dict Optional slurpy/;
+use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef Bool/;
 use aliased 'Parse::Method::Signatures::Param::Named';
 use aliased 'Parse::Method::Signatures::Param::Placeholder';
 
@@ -57,6 +57,11 @@ has _named_args => (
     isa     => ArrayRef,
     lazy    => 1,
     builder => '_build__named_args',
+);
+
+has _has_slurpy_positional => (
+    is   => 'rw',
+    isa  => Bool,
 );
 
 has type_constraint => (
@@ -197,6 +202,11 @@ sub _param_to_spec {
     }
 
     my %spec;
+    if ($param->sigil ne '$') {
+        $spec{slurpy} = 1;
+        $tc = slurpy ArrayRef[$tc];
+    }
+
     $spec{tc} = $param->required
         ? $tc
         : does_role($param, Named)
@@ -251,12 +261,16 @@ sub _build__positional_args {
         ? $self->_param_to_spec($sig->invocant)
         : { tc => Object };
 
+    my $slurpy = 0;
     if ($sig->has_positional_params) {
         for my $param ($sig->positional_params) {
-            push @positional, $self->_param_to_spec($param);
+            my $spec = $self->_param_to_spec($param);
+            $slurpy ||= 1 if $spec->{slurpy};
+            push @positional, $spec;
         }
     }
 
+    $self->_has_slurpy_positional($slurpy);
     return \@positional;
 }
 
@@ -264,9 +278,16 @@ sub _build__named_args {
     my ($self) = @_;
     my $sig = $self->_parsed_signature;
 
+    # triggering building of positionals before named params is important
+    # because the latter needs to know if there have been any slurpy
+    # positionals to report errors
+    $self->_positional_args;
+
     my @named;
 
     if ($sig->has_named_params) {
+        confess 'Named parameters can not be combined with slurpy positionals'
+            if $self->_has_slurpy_positional;
         for my $param ($sig->named_params) {
             push @named, $param->label => $self->_param_to_spec($param);
         }
@@ -306,20 +327,25 @@ sub _build_type_constraint {
                 $i++;
             }
 
-            unless ($#{ $_ } < $i) {
-                my %rest = @{ $_ }[$i .. $#{ $_ }];
-                while (my ($key, $spec) = each %named) {
-                    if (exists $rest{$key}) {
-                        $named_args{$key} = $coerce_param->($spec, delete $rest{$key});
-                        next;
+            if ($self->_has_slurpy_positional) {
+                push @positional_args, @{ $_ }[$i .. $#{ $_ }];
+            }
+            else {
+                unless ($#{ $_ } < $i) {
+                    my %rest = @{ $_ }[$i .. $#{ $_ }];
+                    while (my ($key, $spec) = each %named) {
+                        if (exists $rest{$key}) {
+                            $named_args{$key} = $coerce_param->($spec, delete $rest{$key});
+                            next;
+                        }
+
+                        if (exists $spec->{default}) {
+                            $named_args{$key} = eval $spec->{default};
+                        }
                     }
 
-                    if (exists $spec->{default}) {
-                        $named_args{$key} = eval $spec->{default};
-                    }
+                    @named_args{keys %rest} = values %rest;
                 }
-
-                @named_args{keys %rest} = values %rest;
             }
 
             return [\@positional_args, \%named_args];
