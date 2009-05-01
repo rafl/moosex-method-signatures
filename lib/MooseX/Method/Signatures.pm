@@ -470,6 +470,8 @@ With contributions from:
 
 =item Ash Berlin <ash@cpan.org>
 
+=item Matt Kraai E<lt>kraai@ftbfs.orgE<gt>
+
 =back
 
 =head1 COPYRIGHT AND LICENSE
