@@ -301,11 +301,6 @@ extra lexical variable to be created.
 
 =head1 BUGS, CAVEATS AND NOTES
 
-=head2 Non-scalar parameters
-
-Currently parameters that aren't scalars are unsupported. This is going to
-change soon.
-
 =head2 Fancy signatures
 
 L<Parse::Method::Signatures> is used to parse the signatures. However, some
