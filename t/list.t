@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 15;
+use Test::More tests => 18;
 use Test::Exception;
 use MooseX::Method::Signatures;
 
@@ -60,6 +60,13 @@ my $o = bless {} => 'Foo';
     throws_ok(sub {
         $o->${\$meth->body}([42, 23], 12, [18]);
     }, qr/Validation failed/);
+}
+
+{
+    my $meth = method (Str $foo, Int @) {};
+    lives_ok(sub { $meth->($o, 'foo') });
+    lives_ok(sub { $meth->($o, 'foo', 42) });
+    lives_ok(sub { $meth->($o, 'foo', 42, 23) });
 }
 
 {
