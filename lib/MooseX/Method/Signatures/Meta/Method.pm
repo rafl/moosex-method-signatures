@@ -13,6 +13,7 @@ use MooseX::Types::Structured qw/Tuple Dict Optional slurpy/;
 use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef Bool/;
 use aliased 'Parse::Method::Signatures::Param::Named';
 use aliased 'Parse::Method::Signatures::Param::Placeholder';
+use aliased 'Parse::Method::Signatures::Param::Unpacked';
 
 use namespace::clean -except => 'meta';
 
@@ -226,6 +227,14 @@ sub _param_to_spec {
     return \%spec;
 }
 
+sub _lexicals_for_param {
+    my ($self, $param) = @_;
+    return 'undef' if does_role($param, Placeholder);
+    return map { $self->_lexicals_for_param($_) } $param->params
+        if does_role($param, Unpacked);
+    return $param->variable_name;
+}
+
 sub _build__lexicals {
     my ($self) = @_;
     my ($sig) = $self->_parsed_signature;
@@ -235,10 +244,7 @@ sub _build__lexicals {
         ? $sig->invocant->variable_name
         : '$self';
 
-    push @lexicals,
-        (does_role($_, Placeholder)
-            ? 'undef'
-            : $_->variable_name)
+    push @lexicals, $self->_lexicals_for_param($_)
         for (($sig->has_positional_params ? $sig->positional_params : ()),
              ($sig->has_named_params      ? $sig->named_params      : ()));
 
