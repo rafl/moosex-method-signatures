@@ -326,7 +326,7 @@ signatures into that should be quite possible.
 
 Type constraints for return values can be declared using
 
-  method foo (Int $x, Str $y) returns Bool { ... }
+  method foo (Int $x, Str $y) returns (Bool) { ... }
 
 however, this feature only works with scalar return values and is still
 considered to be experimental.
