@@ -7,7 +7,7 @@ use Moose;
 use Devel::Declare ();
 use B::Hooks::EndOfScope;
 use Moose::Meta::Class;
-use MooseX::Types::Moose qw/Str/;
+use MooseX::Types::Moose qw/Str Bool CodeRef/;
 use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
 use Sub::Name;
@@ -26,10 +26,22 @@ has package => (
 );
 
 has context => (
+    is      => 'ro',
+    isa     => MethodInstaller,
+    lazy    => 1,
+    builder => '_build_context',
+);
+
+has initialized_context => (
+    is      => 'ro',
+    isa     => Bool,
+    default => 0,
+);
+
+has custom_method_application => (
     is        => 'ro',
-    isa       => MethodInstaller,
-    lazy      => 1,
-    builder   => '_build_context',
+    isa       => 'CodeRef',
+    predicate => 'has_custom_method_application'
 );
 
 sub _build_context {
@@ -109,7 +121,7 @@ sub parser {
 sub _parser {
     my $self = shift;
     my $ctx = $self->context;
-    $ctx->init(@_);
+    $ctx->init(@_) unless $self->initialized_context;
 
     $ctx->skip_declarator;
     my $name   = $self->strip_name;
@@ -151,6 +163,13 @@ sub _parser {
     };
 
     if (defined $name) {
+        my $apply = $self->has_custom_method_application
+            ? $self->custom_method_application
+            : sub {
+                my ($meta, $name, $method) = @_;
+                $meta->add_method($name => $method);
+            };
+
         $ctx->shadow(sub {
             my ($code, $name) = @_;
 
@@ -161,12 +180,14 @@ sub _parser {
             my $meth = $create_meta_method->($code, $pkg, $name);
             my $meta = Moose::Meta::Class->initialize($pkg);
             my $meta_meth;
+
             if (warnings::enabled("redefine") &&
                 ($meta_meth = $meta->get_method($name)) &&
                 $meta_meth->isa('MooseX::Method::Signatures::Meta::Method')) {
-              warnings::warn("redefine", "Method $name redefined on package $pkg");
+                warnings::warn("redefine", "Method $name redefined on package $pkg");
             }
-            $meta->add_method($name => $meth);
+
+            $meta->$apply($name, $meth);
             return;
         });
     }
