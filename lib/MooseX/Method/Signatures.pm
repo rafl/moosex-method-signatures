@@ -7,16 +7,35 @@ use Moose;
 use Devel::Declare ();
 use B::Hooks::EndOfScope;
 use Moose::Meta::Class;
+use MooseX::Types::Moose qw/Str/;
 use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
 use Sub::Name;
 use Carp;
 
+use aliased 'Devel::Declare::MethodInstaller::Simple', 'MethodInstaller';
+
 use namespace::clean -except => 'meta';
 
 our $VERSION = '0.16';
 
-extends qw/Moose::Object Devel::Declare::MethodInstaller::Simple/;
+has package => (
+    is       => 'ro',
+    isa      => Str,
+    required => 1,
+);
+
+has context => (
+    is        => 'ro',
+    isa       => MethodInstaller,
+    lazy      => 1,
+    builder   => '_build_context',
+);
+
+sub _build_context {
+    my ($self) = @_;
+    return MethodInstaller->new(into => $self->package);
+}
 
 sub import {
     my ($class) = @_;
@@ -27,10 +46,10 @@ sub import {
 sub setup_for {
     my ($class, $pkg) = @_;
 
-    my $ctx = $class->new(into => $pkg);
+    my $self = $class->new(package => $pkg);
 
     Devel::Declare->setup_for($pkg, {
-        method => { const => sub { $ctx->parser(@_) } },
+        method => { const => sub { $self->parser(@_) } },
     });
 
     {
@@ -41,13 +60,14 @@ sub setup_for {
     return;
 }
 
-override strip_name => sub {
+sub strip_name {
     my ($self) = @_;
-    my $ret = super;
+    my $ctx = $self->context;
+    my $ret = $ctx->strip_name;
     return $ret if defined $ret;
 
-    my $line = $self->get_linestr;
-    my $offset = $self->offset;
+    my $line = $ctx->get_linestr;
+    my $offset = $ctx->offset;
     local $@;
     my ($str) = extract_quotelike(substr($line, $offset));
     return unless defined $str;
@@ -56,18 +76,19 @@ override strip_name => sub {
     die $@ if $@;
 
     substr($line, $offset, length $str) = '';
-    $self->set_linestr($line);
+    $ctx->set_linestr($line);
 
     return \$str;
-};
+}
 
 sub strip_return_type_constraint {
     my ($self) = @_;
-    my $returns = $self->strip_name;
+    my $ctx = $self->context;
+    my $returns = $ctx->strip_name;
     return unless defined $returns;
     confess "expected 'returns', found '${returns}'"
         unless $returns eq 'returns';
-    return $self->strip_proto;
+    return $ctx->strip_proto;
 }
 
 sub parser {
@@ -87,15 +108,16 @@ sub parser {
 
 sub _parser {
     my $self = shift;
-    $self->init(@_);
+    my $ctx = $self->context;
+    $ctx->init(@_);
 
-    $self->skip_declarator;
+    $ctx->skip_declarator;
     my $name   = $self->strip_name;
-    my $proto  = $self->strip_proto;
-    my $attrs  = $self->strip_attrs || '';
+    my $proto  = $ctx->strip_proto;
+    my $attrs  = $ctx->strip_attrs || '';
     my $ret_tc = $self->strip_return_type_constraint;
 
-    my $compile_stash = $self->get_curstash_name;
+    my $compile_stash = $ctx->get_curstash_name;
 
     my %args = (
       signature => q{(} . ($proto || '') . q{)},
@@ -105,7 +127,6 @@ sub _parser {
       package_name => $compile_stash,
     );
     $args{return_signature} = $ret_tc if defined $ret_tc;
-
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
 
     my $after_block = ')';
@@ -118,8 +139,7 @@ sub _parser {
     my $inject = $method->injectable_code;
     $inject = $self->scope_injector_call($after_block) . $inject;
 
-    $self->inject_if_block($inject, "(sub ${attrs} ");
-
+    $ctx->inject_if_block($inject, "(sub ${attrs} ");
 
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name) = @_;
@@ -131,7 +151,7 @@ sub _parser {
     };
 
     if (defined $name) {
-        $self->shadow(sub {
+        $ctx->shadow(sub {
             my ($code, $name) = @_;
 
             my $pkg = $compile_stash;
@@ -151,7 +171,7 @@ sub _parser {
         });
     }
     else {
-        $self->shadow(sub {
+        $ctx->shadow(sub {
             return $create_meta_method->(shift, $compile_stash, '__ANON__');
         });
     }
