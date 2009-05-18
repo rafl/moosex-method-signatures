@@ -14,7 +14,7 @@ use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef Bool/;
 use aliased 'Parse::Method::Signatures::Param::Named';
 use aliased 'Parse::Method::Signatures::Param::Placeholder';
 
-use namespace::clean -except => 'meta';
+use namespace::autoclean;
 
 extends 'Moose::Meta::Method';
 

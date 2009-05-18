@@ -15,7 +15,7 @@ use Carp;
 
 use aliased 'Devel::Declare::MethodInstaller::Simple', 'MethodInstaller';
 
-use namespace::clean -except => 'meta';
+use namespace::autoclean;
 
 our $VERSION = '0.16';
 
