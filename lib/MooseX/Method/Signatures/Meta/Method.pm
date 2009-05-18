@@ -11,6 +11,7 @@ use MooseX::Meta::TypeConstraint::ForceCoercion;
 use MooseX::Types::Util qw/has_available_type_export/;
 use MooseX::Types::Structured qw/Tuple Dict Optional slurpy/;
 use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef Bool/;
+use MooseX::Method::Signatures::Types qw/Injections Params/;
 use aliased 'Parse::Method::Signatures::Param::Named';
 use aliased 'Parse::Method::Signatures::Param::Placeholder';
 
@@ -89,6 +90,19 @@ has actual_body => (
     isa       => CodeRef,
     writer    => '_set_actual_body',
     predicate => '_has_actual_body',
+);
+
+has prototype_injections => (
+    is          => 'rw',
+    isa         => Injections,
+    trigger     => \&_parse_prototype_injections
+);
+
+has _parsed_prototype_injections => (
+    is          => 'ro',
+    isa         => Params,
+    predicate   => '_has_parsed_prototype_injections',
+    writer      => '_set_parsed_prototype_injections',
 );
 
 before actual_body => sub {
@@ -226,11 +240,37 @@ sub _param_to_spec {
     return \%spec;
 }
 
+sub _parse_prototype_injections {
+    my $self = shift;
+
+    my @params;
+    for my $inject (@{ $self->prototype_injections }) {
+        my $param;
+        eval {
+            $param = Parse::Method::Signatures->param($inject);
+        };
+
+        confess "There was a problem parsing the prototype injection '$inject': $@"
+            if $@ || !defined $param;
+
+        push @params, $param;
+    }
+
+    my @return = reverse @params;
+    $self->_set_parsed_prototype_injections(\@return);
+}
+
 sub _build__lexicals {
     my ($self) = @_;
     my ($sig) = $self->_parsed_signature;
 
     my @lexicals;
+
+    if ($self->_has_parsed_prototype_injections) {
+        push @lexicals, $_->variable_name
+            for @{ $self->_parsed_prototype_injections };
+    }
+
     push @lexicals, $sig->has_invocant
         ? $sig->invocant->variable_name
         : '$self';
@@ -256,6 +296,11 @@ sub _build__positional_args {
     my $sig = $self->_parsed_signature;
 
     my @positional;
+    if ($self->_has_parsed_prototype_injections) {
+        push @positional, map {
+            $self->_param_to_spec($_)
+        } @{ $self->_parsed_prototype_injections };
+    }
 
     push @positional, $sig->has_invocant
         ? $self->_param_to_spec($sig->invocant)
