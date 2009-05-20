@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 29;
+use Test::More tests => 36;
 use Test::Exception;
 
 use FindBin;
@@ -69,6 +69,17 @@ lives_ok(sub {
 lives_ok(sub { $o->with_coercion({}) });
 dies_ok(sub { $o->without_coercion({}) });
 
+lives_ok(sub { $o->optional_with_coercion() });
+{
+  local $TODO = <<TODO;
+This is more a wishlist item than a bug, but having defaults for complex
+parameters via coercion would be great.
+TODO
+    lives_ok(sub {
+        $o->default_with_coercion()
+    }, 'Complex default with coercion' );
+}
+
 # MooseX::Meta::Signature::Combined bug? optional positional can't be omitted
 #lives_ok(sub { $o->combined(1, 2, required => 3) });
 #lives_ok(sub { $o->combined(1, 2, required => 3, optional => 4) });
@@ -77,3 +88,14 @@ use MooseX::Method::Signatures;
 
 my $anon = method ($foo, $bar) { };
 isa_ok($anon, 'Moose::Meta::Method');
+
+use TestClassWithMxTypes;
+
+my $mxt =  TestClassWithMxTypes->new();
+
+dies_ok(sub { $mxt->with_coercion() });
+lives_ok(sub { $mxt->with_coercion('Str') });
+
+isa_ok( $mxt->with_coercion('Str'), q/Moose::Meta::TypeConstraint/ );
+lives_ok(sub { $mxt->optional_with_coercion() });
+lives_ok(sub { $mxt->optional_with_coercion('Str') });
