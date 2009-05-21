@@ -156,6 +156,26 @@ sub wrap {
         }
     }
 
+    if(exists $args{traits}) {
+        # my @traits = split(/,/, $args{traits});
+        my @traits;
+        foreach my $t (@{ $args{traits} }) {
+            # First member is the name of the trait
+            my $tname = $t->[0];
+            # Second member is the arguments for the trait
+            my $targs = $t->[1];
+            Class::MOP::load_class($tname);
+            push(@traits, $tname);
+        }
+        my $meta = Moose::Meta::Class->create_anon_class(
+            superclasses => [ $class ],
+            roles => [ @traits ],
+            cache => 1
+        );
+        $meta->add_method(meta => sub { $meta });
+        $class = $meta->name;
+    }
+
     $self = $class->_new(%args, body => $to_wrap );
 
     # Vivify the type constraints so TC lookups happen before namespace::clean
