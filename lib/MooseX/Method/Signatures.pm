@@ -120,6 +120,35 @@ sub strip_name {
     return \$str;
 }
 
+sub strip_traits {
+    my ($self) = @_;
+
+    my $ctx = $self->context;
+    my $linestr = $ctx->get_linestr;
+
+    unless (substr($linestr, $ctx->offset, 2) eq 'is') {
+        # No is means no traits, return an empty arrayref
+        return [];
+    }
+
+    my @traits = ();
+
+    while (substr($linestr, $ctx->offset, 2) eq 'is') {
+        # Eat the 'is' so we can call strip_names_and_args
+        substr($linestr, $ctx->offset, 2) = '';
+        $ctx->set_linestr($linestr);
+        push(@traits, @{ $ctx->strip_names_and_args });
+        # Get the current linestr so that the loop can look for more 'is'
+        $ctx->skipspace;
+        $linestr = $ctx->get_linestr;
+    }
+
+    confess "expected traits after 'is', found nothing"
+        unless scalar(@traits);
+
+    return \@traits;
+}
+
 sub strip_return_type_constraint {
     my ($self) = @_;
     my $ctx = $self->context;
@@ -154,6 +183,7 @@ sub _parser {
     my $name   = $self->strip_name;
     my $proto  = $ctx->strip_proto;
     my $attrs  = $ctx->strip_attrs || '';
+    my $traits = $self->strip_traits;
     my $ret_tc = $self->strip_return_type_constraint;
 
     my $compile_stash = $ctx->get_curstash_name;
@@ -175,12 +205,34 @@ sub _parser {
 
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
 
-    my $after_block = ')';
-
+    my $after_block = '';
     if (defined $name) {
         my $name_arg = q{, } . (ref $name ? ${$name} : qq{q[${name}]});
-        $after_block = $name_arg . $after_block . q{;};
+        $after_block = $name_arg . $after_block;
     }
+
+    if(defined($traits) && scalar(@{ $traits })) {
+
+        my @t_args = ();
+        foreach my $t (@{ $traits }) {
+            my $trait_args;
+            my $args = $t->[1];
+            if(defined($args)) {
+                $args = quotemeta($args);
+            } else {
+                $args = '';
+            }
+            $trait_args = qq{q[$t->[0]] => q[$args]};
+            push(@t_args, $trait_args);
+        }
+
+        if(scalar(@t_args)) {
+            $after_block .= ', {'.join(',', @t_args).'}';
+        }
+    }
+
+    $after_block .= q[)];
+    $after_block .= q[;] if defined $name;
 
     my $inject = $method->injectable_code;
     $inject = $self->scope_injector_call($after_block) . $inject;
@@ -189,7 +241,7 @@ sub _parser {
 
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name) = @_;
-        subname $pkg . "::" .$meth_name, $code;
+        subname $pkg . '::' .$meth_name, $code;
         $method->_set_actual_body($code);
         $method->_set_package_name($pkg);
         $method->_set_name($meth_name);
@@ -205,7 +257,7 @@ sub _parser {
             };
 
         $ctx->shadow(sub {
-            my ($code, $name) = @_;
+            my ($code, $name, $trait_spec) = @_;
 
             my $pkg = $compile_stash;
             ($pkg, $name) = $name =~ /^(.*)::([^:]+)$/
@@ -214,6 +266,24 @@ sub _parser {
             my $meth = $create_meta_method->($code, $pkg, $name);
             my $meta = Moose::Meta::Class->initialize($pkg);
             my $meta_meth;
+
+            if(defined($trait_spec)) {
+
+                my @traits;
+                foreach my $tname (keys %{ $trait_spec }) {
+                    Class::MOP::load_class($tname);
+                    push(@traits, $tname);
+                }
+
+                $meta = $meth->meta->create_anon_class(
+                    superclasses => [ $meth->meta->name ],
+                    roles => [ @traits ],
+                    cache => 1
+                );
+                $meth = $meta->new_object(
+                    %{ $meth }, name => $name
+                );
+            }
 
             if (warnings::enabled("redefine") &&
                 ($meta_meth = $meta->get_method($name)) &&
