@@ -11,6 +11,8 @@ use MooseX::Types::Moose qw/Str Bool CodeRef/;
 use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
 use MooseX::Method::Signatures::Types qw/PrototypeInjections/;
+use Parse::Constructor::Arguments;
+use Hash::Merge;
 use Sub::Name;
 use Carp;
 
@@ -270,18 +272,28 @@ sub _parser {
             if(defined($trait_spec)) {
 
                 my @traits;
-                foreach my $tname (keys %{ $trait_spec }) {
+                my $role_args = {};
+                while( my ($tname, $targs) = each %{ $trait_spec }) {
                     Class::MOP::load_class($tname);
                     push(@traits, $tname);
+                    if($targs) {
+                        # reverse quotemeta
+                        $targs =~ s{(\\(?:x[A-Fa-f0-9]{0,2}|0[0-7]{0,3}|c.|.))}{qq["$1"]}gees;
+                        my $parsed = Parse::Constructor::Arguments->parse($targs);
+                        $role_args = Hash::Merge::merge($role_args, $parsed);
+                    }
                 }
 
-                $meta = $meth->meta->create_anon_class(
+                my $method_meta = $meth->meta->create_anon_class(
                     superclasses => [ $meth->meta->name ],
                     roles => [ @traits ],
                     cache => 1
                 );
-                $meth = $meta->new_object(
-                    %{ $meth }, name => $name
+
+                $meth = $method_meta->new_object(
+                    %{ $meth }, 
+                    %{ $role_args },
+                    name => $name
                 );
             }
 
