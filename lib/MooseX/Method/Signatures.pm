@@ -23,7 +23,6 @@ our $VERSION = '0.16';
 has package => (
     is       => 'ro',
     isa      => Str,
-    required => 1,
 );
 
 has context => (
