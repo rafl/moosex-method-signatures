@@ -20,7 +20,7 @@ requires 'namespace::autoclean';
 requires 'Sub::Name';
 requires 'Task::Weaken';
 requires 'Text::Balanced';
-requires 'Parse::Constructor::Arguments' => '0.091510';
+requires 'Parse::Constructor::Arguments' => '0.091540';
 requires 'Hash::Merge' => '0.11';
 
 test_requires 'Test::Exception';
