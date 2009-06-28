@@ -7,10 +7,8 @@ use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
 
 {
-
     package Bar::Foo;
     use Moose;
-    has 'x' => ( isa => 'Str', );
 }
 
 my $ISTODO = 1;
