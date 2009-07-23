@@ -401,7 +401,7 @@ extra lexical variable to be created.
 
     # the invocant is called $thing, must be an instance of SomeClass and
            has to implement a 'stuff' method
-    # $bar is positional, required, must be a string and defaults to "affe"
+    # $bar is positional, required, must be a string and defaults to "apan"
     # $baz is named, required, must be an integer, defaults to 42 and needs
     #      to be even and greater than 10
 
