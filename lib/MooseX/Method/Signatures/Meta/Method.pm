@@ -184,6 +184,13 @@ sub wrap {
     return $self;
 };
 
+# ok, this is a little lame, as you can't really rely on the normal attribute
+# initialisation within your traits. I suppose we should create the metamethod
+# subclass with its traits here and pass the trait parameters directly to its
+# constructor, throwing away the current "compile-time metamethod" and
+# returning the one that'll be used at runtime. that'd also allow us to get rid
+# of some hacks we currently have, because the metamethod instance persists
+# from compile time to runtme (see _set_name, _set_package_name, etc).
 sub _adopt_trait_args {
     my ($self, %args) = @_;
     while (my ($name, $val) = each %args) {
