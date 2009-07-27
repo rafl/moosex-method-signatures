@@ -127,11 +127,11 @@ sub strip_traits {
     my $linestr = $ctx->get_linestr;
 
     unless (substr($linestr, $ctx->offset, 2) eq 'is') {
-        # No is means no traits, return an empty arrayref
-        return [];
+        # No is means no traits
+        return;
     }
 
-    my @traits = ();
+    my @traits;
 
     while (substr($linestr, $ctx->offset, 2) eq 'is') {
         # Eat the 'is' so we can call strip_names_and_args
@@ -195,7 +195,7 @@ sub _parser {
       # symbols at compile time
       package_name => $compile_stash,
     );
-    $args{traits} = $traits if defined $traits && scalar(@{ $traits });
+    $args{traits} = $traits if $traits;
     $args{return_signature} = $ret_tc if defined $ret_tc;
 
     if ($self->has_prototype_injections) {
@@ -208,6 +208,12 @@ sub _parser {
 
     my $after_block = ')';
 
+    if ($traits) {
+        if (my @trait_args = grep { defined } map { $_->[1] } @{ $traits }) {
+            $after_block = q{, } . join(q{,} => @trait_args) . $after_block;
+        }
+    }
+
     if (defined $name) {
         my $name_arg = q{, } . (ref $name ? ${$name} : qq{q[${name}]});
         $after_block = $name_arg . $after_block . q{;};
@@ -219,11 +225,12 @@ sub _parser {
     $ctx->inject_if_block($inject, "(sub ${attrs} ");
 
     my $create_meta_method = sub {
-        my ($code, $pkg, $meth_name) = @_;
+        my ($code, $pkg, $meth_name, @args) = @_;
         subname $pkg . "::" .$meth_name, $code;
         $method->_set_actual_body($code);
         $method->_set_package_name($pkg);
         $method->_set_name($meth_name);
+        $method->_adopt_trait_args(@args);
         return $method;
     };
 
@@ -236,13 +243,13 @@ sub _parser {
             };
 
         $ctx->shadow(sub {
-            my ($code, $name) = @_;
+            my ($code, $name, @args) = @_;
 
             my $pkg = $compile_stash;
             ($pkg, $name) = $name =~ /^(.*)::([^:]+)$/
                 if $name =~ /::/;
 
-            my $meth = $create_meta_method->($code, $pkg, $name);
+            my $meth = $create_meta_method->($code, $pkg, $name, @args);
             my $meta = Moose::Meta::Class->initialize($pkg);
             my $meta_meth;
 
@@ -258,13 +265,14 @@ sub _parser {
     }
     else {
         $ctx->shadow(sub {
-            return $create_meta_method->(shift, $compile_stash, '__ANON__');
+            return $create_meta_method->(shift, $compile_stash, '__ANON__', @_);
         });
     }
 }
 
 sub scope_injector_call {
     my ($self, $code) = @_;
+    $code =~ s/'/\\'/g; # we're generating code that's quoted with single quotes
     return qq[BEGIN { ${\ref $self}->inject_scope('${code}') }];
 }
 

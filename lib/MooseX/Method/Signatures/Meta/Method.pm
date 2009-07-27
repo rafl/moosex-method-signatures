@@ -156,27 +156,22 @@ sub wrap {
         }
     }
 
-    if(exists $args{traits}) {
-        # my @traits = split(/,/, $args{traits});
-        my @traits;
-        foreach my $t (@{ $args{traits} }) {
-            # First member is the name of the trait
-            my $tname = $t->[0];
-            # Second member is the arguments for the trait
-            my $targs = $t->[1];
-            Class::MOP::load_class($tname);
-            push(@traits, $tname);
-        }
+    if($args{traits}) {
+        my @traits = map {
+            Class::MOP::load_class($_->[0]); $_->[0];
+        } @{ $args{traits} };
+
         my $meta = Moose::Meta::Class->create_anon_class(
             superclasses => [ $class ],
             roles => [ @traits ],
             cache => 1
         );
         $meta->add_method(meta => sub { $meta });
+
         $class = $meta->name;
     }
 
-    $self = $class->_new(%args, body => $to_wrap );
+    $self = $class->_new(%args, body => $to_wrap);
 
     # Vivify the type constraints so TC lookups happen before namespace::clean
     # removes them
@@ -188,6 +183,16 @@ sub wrap {
 
     return $self;
 };
+
+sub _adopt_trait_args {
+    my ($self, %args) = @_;
+    while (my ($name, $val) = each %args) {
+        my $attr = $self->meta->get_attribute($name);
+        confess qq{trying to set non-existant metamethod attribute $name}
+            unless $attr;
+        $attr->set_initial_value($self, $val);
+    }
+}
 
 sub _build__parsed_signature {
     my ($self) = @_;

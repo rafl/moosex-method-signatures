@@ -31,8 +31,5 @@ my $param_method = $c->meta->get_method('method_with_two_is_param_traits');
 ok(does_role($twois_method, 'MXMSMoody'), 'param method has MXMSMoody trait');
 ok(does_role($twois_method, 'MXMSLabeled'), 'param method has MXMSLabeled trait');
 
-SKIP: {
-	skip 'attributes not supported yet', 2;
-	ok($param_method->has_label, 'method has label');
-	cmp_ok($param_method->label, 'eq', 'happy', 'label is happy');
-}
+ok($param_method->has_label, 'method has label');
+cmp_ok($param_method->label, 'eq', 'happy', 'label is happy');
