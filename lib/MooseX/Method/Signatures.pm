@@ -146,6 +146,19 @@ sub strip_traits {
     confess "expected traits after 'is', found nothing"
         unless scalar(@traits);
 
+    # Let's check to make sure these traits aren't aliased locally
+    for my $t (@traits) {
+        my $class = $ctx->get_curstash_name;
+        my $meta = Class::MOP::class_of($class) || Moose::Meta::Class->initialize($class);
+        my $func = $meta->get_package_symbol('&' . $t->[0]);
+        next unless $func;
+
+        my $proto = prototype $func;
+        next if !defined $proto || length $proto;
+
+        $t->[0] = $func->();
+    }
+
     return \@traits;
 }
 
