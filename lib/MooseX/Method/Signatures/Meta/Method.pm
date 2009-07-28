@@ -153,18 +153,18 @@ sub wrap {
             @_ = $self->validate(\@_);
             $actual_body ||= $self->actual_body;
             goto &{ $actual_body };
-        }
+        };
     }
 
-    if($args{traits}) {
+    if ($args{traits}) {
         my @traits = map {
             Class::MOP::load_class($_->[0]); $_->[0];
         } @{ $args{traits} };
 
         my $meta = Moose::Meta::Class->create_anon_class(
-            superclasses => [ $class ],
-            roles => [ @traits ],
-            cache => 1
+            superclasses => [ $class  ],
+            roles        => [ @traits ],
+            cache        => 1,
         );
         $meta->add_method(meta => sub { $meta });
 
@@ -182,7 +182,7 @@ sub wrap {
         if $self->{associated_metaclass};
 
     return $self;
-};
+}
 
 # ok, this is a little lame, as you can't really rely on the normal attribute
 # initialisation within your traits. I suppose we should create the metamethod
