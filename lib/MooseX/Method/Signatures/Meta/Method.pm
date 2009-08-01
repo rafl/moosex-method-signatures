@@ -22,6 +22,7 @@ extends 'Moose::Meta::Method';
 has signature => (
     is       => 'ro',
     isa      => Maybe[Str],
+    default  => '(@)',
     required => 1,
 );
 
