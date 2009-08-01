@@ -202,14 +202,13 @@ sub _parser {
     my $compile_stash = $ctx->get_curstash_name;
 
     my %args = (
-      signature => q{(} . ($proto || '') . q{)},
-
       # This might get reset later, but its where we search for exported
       # symbols at compile time
       package_name => $compile_stash,
     );
-    $args{traits} = $traits if $traits;
-    $args{return_signature} = $ret_tc if defined $ret_tc;
+    $args{ signature        } = qq{($proto)} if defined $proto;
+    $args{ traits           } = $traits      if $traits;
+    $args{ return_signature } = $ret_tc      if defined $ret_tc;
 
     if ($self->has_prototype_injections) {
         confess('Configured declarator does not match context declarator')
