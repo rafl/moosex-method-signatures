@@ -127,7 +127,7 @@ sub strip_traits {
     my $linestr = $ctx->get_linestr;
 
     unless (substr($linestr, $ctx->offset, 2) eq 'is') {
-        # No is means no traits
+        # No 'is' means no traits
         return;
     }
 
@@ -137,7 +137,7 @@ sub strip_traits {
         # Eat the 'is' so we can call strip_names_and_args
         substr($linestr, $ctx->offset, 2) = '';
         $ctx->set_linestr($linestr);
-        push(@traits, @{ $ctx->strip_names_and_args });
+        push @traits, @{ $ctx->strip_names_and_args };
         # Get the current linestr so that the loop can look for more 'is'
         $ctx->skipspace;
         $linestr = $ctx->get_linestr;
