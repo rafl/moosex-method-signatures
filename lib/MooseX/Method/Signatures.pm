@@ -14,7 +14,7 @@ use MooseX::Method::Signatures::Types qw/PrototypeInjections/;
 use Sub::Name;
 use Carp;
 
-use aliased 'Devel::Declare::MethodInstaller::Simple', 'MethodInstaller';
+use aliased 'Devel::Declare::Context::Simple', 'ContextSimple';
 
 use namespace::autoclean;
 
@@ -28,7 +28,7 @@ has package => (
 
 has context => (
     is      => 'ro',
-    isa     => MethodInstaller,
+    isa     => ContextSimple,
     lazy    => 1,
     builder => '_build_context',
 );
@@ -53,7 +53,7 @@ has prototype_injections => (
 
 sub _build_context {
     my ($self) = @_;
-    return MethodInstaller->new(into => $self->package);
+    return ContextSimple->new(into => $self->package);
 }
 
 sub import {
