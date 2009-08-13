@@ -1,5 +1,25 @@
 Version history for MooseX::Method::Signatures
 
+  * Implement method traits (Cory Watson).
+  * Properly test list placeholders.
+  * Document the right syntax for return value type constraints.
+  * Use namespace::autoclean instead of namespace::clean.
+  * Let the signature default to (@) if none is given.
+  * Don't require the package attribute when a pre-built context is passed
+    in.
+  * Depend on a recent Parse::Method::Signatures to make sure we will work
+    with new PPIs and have the right MooseX::Traits version.
+  * Fix doc typo (arcanez).
+  * Split out context from self so that we may pass in an arbitrary context
+    (nperez).
+  * Enable passing a context and also a coderef to use to apply the method
+    once constructed (for deferred method modifier application in MXD)
+    (nperez).
+  * Enable MXMS to work with multiple different declarators and prototype
+    injections (nperez).
+  * Change from using Devel::Declare::MethodInstaller::Simple to
+    ::Context::Simple since strip_attrs was moved down there (nperez).
+
 0.16  Fri, 01 May 2009 08:03:44 +0200
   * Bump prereq to Types::Structured to avoid warnings on new Moose versions.
   * Make sure the method keyword is "tight" enough, so
