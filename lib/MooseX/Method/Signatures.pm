@@ -7,6 +7,7 @@ use Moose;
 use Devel::Declare ();
 use B::Hooks::EndOfScope;
 use Moose::Meta::Class;
+use MooseX::LazyRequire;
 use MooseX::Types::Moose qw/Str Bool CodeRef/;
 use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
@@ -21,9 +22,9 @@ use namespace::autoclean;
 our $VERSION = '0.16';
 
 has package => (
-    is       => 'ro',
-    isa      => Str,
-    required => 1,
+    is           => 'ro',
+    isa          => Str,
+    lazy_require => 1,
 );
 
 has context => (

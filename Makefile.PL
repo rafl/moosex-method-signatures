@@ -12,6 +12,7 @@ requires 'Parse::Method::Signatures' => '1.003004';
 requires 'Devel::Declare' => '0.005009';
 requires 'Moose::Util::TypeConstraints';
 requires 'Moose' => '0.63';
+requires 'MooseX::LazyRequire';
 requires 'MooseX::Meta::TypeConstraint::ForceCoercion';
 requires 'MooseX::Types' => '0.09';
 requires 'MooseX::Types::Moose';
