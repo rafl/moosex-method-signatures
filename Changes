@@ -1,5 +1,6 @@
 Version history for MooseX::Method::Signatures
 
+0.17  Thu, 13 Aug 2009 08:37:31 +0200
   * Implement method traits (Cory Watson).
   * Properly test list placeholders.
   * Document the right syntax for return value type constraints.
