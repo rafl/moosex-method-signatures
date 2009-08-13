@@ -589,6 +589,8 @@ With contributions from:
 
 =item Jonathan Scott Duff E<lt>duff@pobox.comE<gt>
 
+=item Justin Hunter E<lt>justin.d.hunter@gmail.comE<gt>
+
 =item Kent Fredric E<lt>kentfredric@gmail.comE<gt>
 
 =item Matt Kraai E<lt>kraai@ftbfs.orgE<gt>
