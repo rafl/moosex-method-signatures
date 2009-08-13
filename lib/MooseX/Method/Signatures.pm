@@ -583,6 +583,8 @@ With contributions from:
 
 =item Ash Berlin E<lt>ash@cpan.orgE<gt>
 
+=item Cory Watson E<lt>gphat@cpan.orgE<gt>
+
 =item Hakim Cassimally E<lt>hakim.cassimally@gmail.comE<gt>
 
 =item Jonathan Scott Duff E<lt>duff@pobox.comE<gt>
