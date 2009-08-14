@@ -9,7 +9,7 @@ requires 'aliased';
 requires 'B::Hooks::EndOfScope' => '0.07';
 requires 'Context::Preserve';
 requires 'Parse::Method::Signatures' => '1.003010';
-requires 'Devel::Declare' => '0.005009';
+requires 'Devel::Declare' => '0.005011';
 requires 'Moose::Util::TypeConstraints';
 requires 'Moose' => '0.63';
 requires 'MooseX::LazyRequire';
