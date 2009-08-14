@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.19  Fri, 14 Aug 2009 11:23:42 +0200
+  * Move method redefinition warnings to the method application hook so it's
+    easy to override.
+
 0.18  Fri, 14 Aug 2009 02:24:41 +0200
   * Depend on Devel::Declare 0.005011. This avoids "->method" and "method =>"
     being misinterpreted sometimes.
