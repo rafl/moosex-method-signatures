@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.18  Fri, 14 Aug 2009 02:24:41 +0200
+  * Depend on Devel::Declare 0.005011. This avoids "->method" and "method =>"
+    being misinterpreted sometimes.
+
 0.17  Thu, 13 Aug 2009 08:37:31 +0200
   * Implement method traits (Cory Watson).
   * Properly test list placeholders.
