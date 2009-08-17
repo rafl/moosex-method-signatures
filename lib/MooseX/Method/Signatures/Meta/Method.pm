@@ -1,6 +1,7 @@
 package MooseX::Method::Signatures::Meta::Method;
 
 use Moose;
+use Carp qw/cluck/;
 use Context::Preserve;
 use Parse::Method::Signatures;
 use Parse::Method::Signatures::TypeConstraint;
@@ -26,12 +27,17 @@ has signature => (
     required => 1,
 );
 
-has _parsed_signature => (
+has parsed_signature => (
     is      => 'ro',
     isa     => class_type('Parse::Method::Signatures::Sig'),
     lazy    => 1,
-    builder => '_build__parsed_signature',
+    builder => '_build_parsed_signature',
 );
+
+sub _parsed_signature {
+    cluck '->_parsed_signature is deprecated. use ->parsed_signature instead.';
+    shift->parsed_signature;
+}
 
 has _lexicals => (
     is      => 'ro',
@@ -202,7 +208,7 @@ sub _adopt_trait_args {
     }
 }
 
-sub _build__parsed_signature {
+sub _build_parsed_signature {
     my ($self) = @_;
     return Parse::Method::Signatures->signature(
         input => $self->signature,
@@ -295,7 +301,7 @@ sub _parse_prototype_injections {
 
 sub _build__lexicals {
     my ($self) = @_;
-    my ($sig) = $self->_parsed_signature;
+    my ($sig) = $self->parsed_signature;
 
     my @lexicals;
 
@@ -326,7 +332,7 @@ sub _build_injectable_code {
 
 sub _build__positional_args {
     my ($self) = @_;
-    my $sig = $self->_parsed_signature;
+    my $sig = $self->parsed_signature;
 
     my @positional;
     if ($self->_has_parsed_prototype_injections) {
@@ -354,7 +360,7 @@ sub _build__positional_args {
 
 sub _build__named_args {
     my ($self) = @_;
-    my $sig = $self->_parsed_signature;
+    my $sig = $self->parsed_signature;
 
     # triggering building of positionals before named params is important
     # because the latter needs to know if there have been any slurpy
