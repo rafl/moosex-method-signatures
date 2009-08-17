@@ -22,9 +22,9 @@ use namespace::autoclean;
 our $VERSION = '0.19';
 
 has package => (
-    is           => 'ro',
-    isa          => Str,
-    lazy_require => 1,
+    is            => 'ro',
+    isa           => Str,
+    lazy_required => 1,
 );
 
 has context => (
