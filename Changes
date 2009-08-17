@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.20  Mon, 17 Aug 2009 12:11:32 +0200
+  * Make the meta method's parsed_signature public.
+  * Use MooseX::LazyRequire's new interface and depend on 0.03.
+
 0.19  Fri, 14 Aug 2009 11:23:42 +0200
   * Move method redefinition warnings to the method application hook so it's
     easy to override.
