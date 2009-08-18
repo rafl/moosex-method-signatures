@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.21  Tue, 18 Aug 2009 08:45:48 +0200
+  * Add tests for using aliased.pm for type aliases (Steffen Schwigon).
+  * Depend on the latest PMS to get type alias resolving.
+
 0.20  Mon, 17 Aug 2009 12:11:32 +0200
   * Make the meta method's parsed_signature public.
   * Use MooseX::LazyRequire's new interface and depend on 0.03.
