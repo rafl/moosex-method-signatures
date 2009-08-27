@@ -217,7 +217,7 @@ sub _parser {
         $args{prototype_injections} = $self->prototype_injections->{injections};
     }
 
-    my $method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
+    my $proto_method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
 
     my $after_block = ')';
 
@@ -232,7 +232,7 @@ sub _parser {
         $after_block = $name_arg . $after_block . q{;};
     }
 
-    my $inject = $method->injectable_code;
+    my $inject = $proto_method->injectable_code;
     $inject = $self->scope_injector_call($after_block) . $inject;
 
     $ctx->inject_if_block($inject, "(sub ${attrs} ");
@@ -240,10 +240,12 @@ sub _parser {
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name, @args) = @_;
         subname $pkg . "::" .$meth_name, $code;
-        $method->_set_actual_body($code);
-        $method->_set_package_name($pkg);
-        $method->_set_name($meth_name);
-        $method->_adopt_trait_args(@args);
+        my $method = $proto_method->clone(
+            actual_body  => $code,
+            package_name => $pkg,
+            name         => $meth_name,
+            trait_args   => \@args,
+        );
         return $method;
     };
 

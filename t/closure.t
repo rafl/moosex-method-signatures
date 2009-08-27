@@ -23,8 +23,7 @@ can_ok('Foo', map { ("anon_$_", "str_$_") } qw/foo bar baz/);
 
 my $foo = Foo->new;
 
-TODO: for my $meth (qw/foo bar baz/) {
-    local $TODO = 'weird closing behaviour';
+for my $meth (qw/foo bar baz/) {
     is($foo->${\"anon_$meth"}('bar'), $meth . 'bar');
     is($foo->${\"str_$meth"}('bar'), $meth . 'bar');
 }

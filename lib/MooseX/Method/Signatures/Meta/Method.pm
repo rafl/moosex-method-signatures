@@ -95,7 +95,6 @@ has _return_type_constraint => (
 has actual_body => (
     is        => 'ro',
     isa       => CodeRef,
-    writer    => '_set_actual_body',
     predicate => '_has_actual_body',
 );
 
@@ -126,14 +125,28 @@ around name => sub {
     return $ret;
 };
 
-sub _set_name {
-    my ($self, $name) = @_;
-    $self->{name} = $name;
-}
+sub _wrapped_body {
+    my ($class, $self, %args) = @_;
 
-sub _set_package_name {
-    my ($self, $package_name) = @_;
-    $self->{package_name} = $package_name;
+    if (exists $args{return_signature}) {
+        return sub {
+            my @args = ${ $self }->validate(\@_);
+            return preserve_context { ${ $self }->actual_body->(@args) }
+                after => sub {
+                    if (defined (my $msg = ${ $self }->_return_type_constraint->validate(\@_))) {
+                        confess $msg;
+                    }
+                };
+        };
+    }
+
+    my $actual_body;
+    return sub {
+        @_ = ${ $self }->validate(\@_);
+        $actual_body ||= ${ $self }->actual_body;
+        goto &{ $actual_body };
+    };
+
 }
 
 sub wrap {
@@ -142,26 +155,9 @@ sub wrap {
     $args{actual_body} = delete $args{body}
         if exists $args{body};
 
-    my ($to_wrap, $self);
+    my $self;
+    my $to_wrap = $class->_wrapped_body(\$self, %args);
 
-    if (exists $args{return_signature}) {
-        $to_wrap = sub {
-            my @args = $self->validate(\@_);
-            return preserve_context { $self->actual_body->(@args) }
-                after => sub {
-                    if (defined (my $msg = $self->_return_type_constraint->validate(\@_))) {
-                        confess $msg;
-                    }
-                };
-        };
-    } else {
-        my $actual_body;
-        $to_wrap = sub {
-            @_ = $self->validate(\@_);
-            $actual_body ||= $self->actual_body;
-            goto &{ $actual_body };
-        };
-    }
 
     if ($args{traits}) {
         my @traits = map {
@@ -191,21 +187,21 @@ sub wrap {
     return $self;
 }
 
-# ok, this is a little lame, as you can't really rely on the normal attribute
-# initialisation within your traits. I suppose we should create the metamethod
-# subclass with its traits here and pass the trait parameters directly to its
-# constructor, throwing away the current "compile-time metamethod" and
-# returning the one that'll be used at runtime. that'd also allow us to get rid
-# of some hacks we currently have, because the metamethod instance persists
-# from compile time to runtme (see _set_name, _set_package_name, etc).
-sub _adopt_trait_args {
-    my ($self, %args) = @_;
-    while (my ($name, $val) = each %args) {
-        my $attr = $self->meta->get_attribute($name);
-        confess qq{trying to set non-existant metamethod attribute $name}
-            unless $attr;
-        $attr->set_initial_value($self, $val);
-    }
+sub clone {
+    my ($self, %params) = @_;
+    my $trait_args = delete $params{trait_args};
+
+    my $clone;
+    $clone = $self->meta->clone_object($self,
+        %params, @{ $trait_args || [] },
+        body => $self->_wrapped_body(\$clone,
+            ($self->has_return_signature
+              ? (return_signature => $self->return_signature)
+              : ()),
+        ),
+    );
+
+    return $clone;
 }
 
 sub _build_parsed_signature {
