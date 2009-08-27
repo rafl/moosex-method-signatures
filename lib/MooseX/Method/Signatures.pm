@@ -240,13 +240,12 @@ sub _parser {
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name, @args) = @_;
         subname $pkg . "::" .$meth_name, $code;
-        my $method = $proto_method->clone(
+        return $proto_method->clone(
             actual_body  => $code,
             package_name => $pkg,
             name         => $meth_name,
             trait_args   => \@args,
         );
-        return $method;
     };
 
     if (defined $name) {
