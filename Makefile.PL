@@ -14,7 +14,7 @@ requires 'Moose::Util::TypeConstraints';
 requires 'Moose' => '0.63';
 requires 'MooseX::LazyRequire' => '0.03';
 requires 'MooseX::Meta::TypeConstraint::ForceCoercion';
-requires 'MooseX::Types' => '0.09';
+requires 'MooseX::Types' => '0.19';
 requires 'MooseX::Types::Moose';
 requires 'MooseX::Types::Structured' => '0.12';
 requires 'namespace::autoclean';
