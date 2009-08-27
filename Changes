@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.23  Thu, 27 Aug 2009 22:22:40 +0200
+  * Bump Moose dependency to 0.89. This avoids test failures on some older
+    Moose versions.
+
 0.22  Thu, 27 Aug 2009 15:29:25 +0200
   * Provide sane closure behaviour for anonymous methods.
   * Add tests for the above (Sebastian Willert).
