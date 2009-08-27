@@ -1,5 +1,10 @@
 Version history for MooseX::Method::Signatures
 
+0.22  Thu, 27 Aug 2009 15:29:25 +0200
+  * Provide sane closure behaviour for anonymous methods.
+  * Add tests for the above (Sebastian Willert).
+  * Depend on MooseX::Types 0.19, as 0.18 made us blow up spectacularly.
+
 0.21  Tue, 18 Aug 2009 08:45:48 +0200
   * Add tests for using aliased.pm for type aliases (Steffen Schwigon).
   * Depend on the latest PMS to get type alias resolving.
