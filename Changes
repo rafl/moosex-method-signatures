@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.24  Mon, 31 Aug 2009 19:04:14 +0200
+  * Rename the meta method's clone method to reify. clone already had a special
+    meaning for methods in role applications to classes.
+
 0.23  Thu, 27 Aug 2009 22:22:40 +0200
   * Bump Moose dependency to 0.89. This avoids test failures on some older
     Moose versions.
