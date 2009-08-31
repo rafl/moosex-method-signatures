@@ -187,7 +187,7 @@ sub wrap {
     return $self;
 }
 
-sub clone {
+sub reify {
     my ($self, %params) = @_;
     my $trait_args = delete $params{trait_args};
 
