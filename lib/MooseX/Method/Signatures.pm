@@ -347,10 +347,6 @@ MooseX::Method::Signatures - Method declarations with type constraints and no so
 
     $foo->greet;                                    # Will fail.
 
-=head1 DISCLAIMER
-
-This is B<ALPHA SOFTWARE>. Use at your own risk. Features may change.
-
 =head1 DESCRIPTION
 
 Provides a proper method keyword, like "sub" but specifically for making methods
@@ -427,6 +423,10 @@ extra lexical variable to be created.
     #      to be even and greater than 10
 
 =head1 BUGS, CAVEATS AND NOTES
+
+This module is as stable now, but this is not to say that it is entirely bug
+free. If you notice any odd behaviour (messages not being as good as they could
+for example) then please raise a bug.
 
 =head2 Fancy signatures
 
@@ -560,6 +560,8 @@ method/subroutine declarations that may have the same name as a
 method/subroutine within a role.
 
 =head1 SEE ALSO
+
+L<MooseX::Declare>
 
 L<Method::Signatures::Simple>
 
