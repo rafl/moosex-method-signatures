@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More;
 use Test::Exception;
 
 use FindBin;
@@ -22,3 +22,5 @@ like($@,
   like($warnings, qr/^Method meth1 redefined on package main at .*?\bRedefined.pm line 9$/,
        "Redefined method warning");
 }
+
+done_testing;
