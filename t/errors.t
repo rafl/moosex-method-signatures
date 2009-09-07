@@ -13,13 +13,6 @@ like($@,
      "Sane error message for syntax error");
 
 
-eval "use InvalidCase02;";
-ok($@, "Got an error");
-like($@, 
-     qr/'SomeRandomTCThatDoesntExist' could not be parsed to a type constraint .*? at .*?\bInvalidCase02.pm line 5$/m,
-     "Sane error message for invalid TC");
-
-
 {
   my $warnings = "";
   local $SIG{__WARN__} = sub { $warnings .= $_[0] };
