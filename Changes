@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.25  Mon, 07 Sep 2009 22:003:03 +0100
+  * Remove scary ALPHA disclaimer from POD
+  * Depend on Test::More 0.88 for done_testing
+
 0.24  Mon, 31 Aug 2009 19:04:14 +0200
   * Rename the meta method's clone method to reify. clone already had a special
     meaning for methods in role applications to classes.
