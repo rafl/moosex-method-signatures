@@ -1,5 +1,8 @@
 Version history for MooseX::Method::Signatures
 
+0.26  Tue, 08 Sep 2009 19:14:01 +0100
+  * Rebuilt dist to include missing files
+
 0.25  Mon, 07 Sep 2009 22:003:03 +0100
   * Remove scary ALPHA disclaimer from POD
   * Depend on Test::More 0.88 for done_testing
