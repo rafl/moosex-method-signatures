@@ -595,6 +595,8 @@ With contributions from:
 
 =item Kent Fredric E<lt>kentfredric@gmail.comE<gt>
 
+=item Maik Hentsche E<lt>maik.hentsche@amd.comE<gt>
+
 =item Matt Kraai E<lt>kraai@ftbfs.orgE<gt>
 
 =item Rhesa Rozendaal E<lt>rhesa@cpan.orgE<gt>
