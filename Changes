@@ -1,5 +1,8 @@
 Version history for MooseX::Method::Signatures
 
+0.28  Fri, 09 Oct 2009 01:28:02 +0200
+  * Fix default values for named arguments.
+
 0.27  Tue, 22 Sep 2009 14:30:23 +0200
   * Depend on MooseX::LazyRequire 0.04 to avoid fail on version 0.03, which has
     been broken by recent Moose versions (Closes RT#49903) (Maik Hentsche).
