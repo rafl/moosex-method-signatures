@@ -407,28 +407,23 @@ sub _build_type_constraint {
                 $i++;
             }
 
-            if ($self->_has_slurpy_positional) {
-                push @positional_args, @{ $_ }[$i .. $#{ $_ }];
-            }
-            else {
-                if (%named) {
-                    my %rest = @{ $_ }[$i .. $#{ $_ }];
-                    while (my ($key, $spec) = each %named) {
-                        if (exists $rest{$key}) {
-                            $named_args{$key} = $coerce_param->($spec, delete $rest{$key});
-                            next;
-                        }
-
-                        if (exists $spec->{default}) {
-                            $named_args{$key} = eval $spec->{default};
-                        }
+            if (%named) {
+                my %rest = @{ $_ }[$i .. $#{ $_ }];
+                while (my ($key, $spec) = each %named) {
+                    if (exists $rest{$key}) {
+                        $named_args{$key} = $coerce_param->($spec, delete $rest{$key});
+                        next;
                     }
 
-                    @named_args{keys %rest} = values %rest;
+                    if (exists $spec->{default}) {
+                        $named_args{$key} = eval $spec->{default};
+                    }
                 }
-                elsif ($#{ $_ } >= $i) {
-                    push @positional_args, @{ $_ }[$i .. $#{ $_ }];
-                }
+
+                @named_args{keys %rest} = values %rest;
+            }
+            elsif ($#{ $_ } >= $i) {
+                push @positional_args, @{ $_ }[$i .. $#{ $_ }];
             }
 
             return [\@positional_args, \%named_args];
