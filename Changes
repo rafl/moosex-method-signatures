@@ -1,5 +1,11 @@
 Version history for MooseX::Method::Signatures
 
+0.29  Thu, 15 Oct 2009 23:27:08 +0200
+  * Fix regression introduced in 0.29.
+    Validation for methods without named arguments wasn't strict enough
+    anymore. Passing too many arguments hasn't been rejected. Thanks
+    Justin Hunter for finding this.
+
 0.28  Fri, 09 Oct 2009 01:28:02 +0200
   * Fix default values for named arguments.
 
