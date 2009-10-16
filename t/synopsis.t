@@ -66,4 +66,10 @@ throws_ok(sub { $someclass->foo(baz => 12) }, qr/Validation failed/, '$someclass
 throws_ok(sub { $someclass->foo(baz => 12, 'quux') }, qr/Validation failed/, '$someclass->foo(baz => 12, "quux")');
 throws_ok(sub { $someclass->foo(baz => 41) }, qr/Validation failed/, '$someclass->foo(baz => 41)');
 
+TODO: {
+    local $TODO = 'this should croak/warn';
+    lives_and(sub { is $someclass->foo(baz => 44), 'apan:12' }, '$someclass->foo(baz => 12)');
+}
+
+
 done_testing;
