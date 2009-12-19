@@ -109,7 +109,8 @@ sub strip_name {
     my $line = $ctx->get_linestr;
     my $offset = $ctx->offset;
     local $@;
-    my ($str) = extract_quotelike(substr($line, $offset));
+    my $copy = substr($line, $offset);
+    my ($str) = extract_quotelike($copy);
     return unless defined $str;
 
     return if ($@ && $@ =~ /^No quotelike operator found/);
