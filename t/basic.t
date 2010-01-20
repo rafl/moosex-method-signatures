@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 29;
+use Test::More;
 use Test::Exception;
 
 use FindBin;
@@ -68,6 +68,8 @@ lives_ok(sub {
 
 lives_ok(sub { $o->with_coercion({}) });
 dies_ok(sub { $o->without_coercion({}) });
+lives_ok(sub { $o->named_with_coercion(foo => bless({}, 'MyType')) });
+lives_ok(sub { $o->named_with_coercion(foo => {}) });
 
 # MooseX::Meta::Signature::Combined bug? optional positional can't be omitted
 #lives_ok(sub { $o->combined(1, 2, required => 3) });
@@ -77,3 +79,5 @@ use MooseX::Method::Signatures;
 
 my $anon = method ($foo, $bar) { };
 isa_ok($anon, 'Moose::Meta::Method');
+
+done_testing;
