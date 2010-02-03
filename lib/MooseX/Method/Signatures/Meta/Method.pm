@@ -11,7 +11,7 @@ use Moose::Util::TypeConstraints;
 use MooseX::Meta::TypeConstraint::ForceCoercion;
 use MooseX::Types::Util qw/has_available_type_export/;
 use MooseX::Types::Structured qw/Tuple Dict Optional slurpy/;
-use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Defined CodeRef Bool/;
+use MooseX::Types::Moose qw/ArrayRef Str Maybe Object Any CodeRef Bool/;
 use MooseX::Method::Signatures::Types qw/Injections Params/;
 use aliased 'Parse::Method::Signatures::Param::Named';
 use aliased 'Parse::Method::Signatures::Param::Placeholder';
@@ -232,7 +232,7 @@ sub _build__return_type_constraint {
 sub _param_to_spec {
     my ($self, $param) = @_;
 
-    my $tc = Defined;
+    my $tc = Any;
     {
         # Ensure errors get reported from the right place
         local $Carp::Internal{'MooseX::Method::Signatures::Meta::Method'} = 1;
@@ -258,9 +258,7 @@ sub _param_to_spec {
 
     $spec{tc} = $param->required
         ? $tc
-        : does_role($param, Named)
-            ? Optional[$tc]
-            : Maybe[$tc];
+        : Optional[$tc];
 
     $spec{default} = $param->default_value
         if $param->has_default_value;
