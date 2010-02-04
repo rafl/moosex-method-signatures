@@ -1,5 +1,12 @@
 Version history for MooseX::Method::Signatures
 
+0.30  Thu, 04 Feb 2010 02:41:36 +0100
+  * Make Any instead of Defined the default type constraint.
+  * Add tests for coercing optional named parameters (Cory Watson).
+    + Make those tests pass by depending on
+      MooseX::Types::Structured 0.20.
+  * Make sure Text::Balanced doesn't screw up our data.
+
 0.29  Thu, 15 Oct 2009 23:27:08 +0200
   * Fix regression introduced in 0.28.
     Validation for methods without named arguments wasn't strict enough
