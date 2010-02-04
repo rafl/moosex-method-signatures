@@ -7,6 +7,7 @@ use FindBin;
 use lib "$FindBin::Bin/lib";
 
 use TestClass;
+use TestClassWithMxTypes;
 
 dies_ok(sub { TestClass->new });
 dies_ok(sub { TestClass->new('moo', 23) });
@@ -71,6 +72,13 @@ dies_ok(sub { $o->without_coercion({}) });
 lives_ok(sub { $o->named_with_coercion(foo => bless({}, 'MyType')) });
 lives_ok(sub { $o->named_with_coercion(foo => {}) });
 
+lives_ok(sub { $o->optional_with_coercion() });
+{
+    lives_ok(sub {
+        $o->default_with_coercion()
+    }, 'Complex default with coercion' );
+}
+
 # MooseX::Meta::Signature::Combined bug? optional positional can't be omitted
 #lives_ok(sub { $o->combined(1, 2, required => 3) });
 #lives_ok(sub { $o->combined(1, 2, required => 3, optional => 4) });
@@ -79,5 +87,14 @@ use MooseX::Method::Signatures;
 
 my $anon = method ($foo, $bar) { };
 isa_ok($anon, 'Moose::Meta::Method');
+
+my $mxt =  TestClassWithMxTypes->new();
+
+dies_ok(sub { $mxt->with_coercion() });
+lives_ok(sub { $mxt->with_coercion('Str') });
+
+isa_ok( $mxt->with_coercion('Str'), q/Moose::Meta::TypeConstraint/ );
+lives_ok(sub { $mxt->optional_with_coercion() });
+lives_ok(sub { $mxt->optional_with_coercion('Str') });
 
 done_testing;

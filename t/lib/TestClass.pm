@@ -57,6 +57,9 @@ method without_coercion (MyType $foo) { $foo }
 method with_coercion (MyType $foo does coerce) { $foo }
 method named_with_coercion (MyType :$foo does coerce) { $foo }
 
+method optional_with_coercion (MyType $foo? does coerce) { $foo }
+method default_with_coercion (MyType $foo={} does coerce) { $foo }
+
 no Moose;
 
 1;
