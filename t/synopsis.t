@@ -62,14 +62,10 @@ lives_and(sub { is $someclass->foo, 'apan:42' }, '$someclass->foo');
 lives_and(sub { is $someclass->foo('quux'), 'quux:42' }, '$someclass->foo("quux")');
 lives_and(sub { is $someclass->foo('quux', baz => 12), 'quux:12' }, '$someclass->foo("quux", baz => 12)');
 
-throws_ok(sub { $someclass->foo(baz => 12) }, qr/Validation failed/, '$someclass->foo(baz => 12)');
+throws_ok(sub { $someclass->foo(baz => 12) }, qr/Expected named arguments/, '$someclass->foo(baz => 12)');
 throws_ok(sub { $someclass->foo(baz => 12, 'quux') }, qr/Validation failed/, '$someclass->foo(baz => 12, "quux")');
-throws_ok(sub { $someclass->foo(baz => 41) }, qr/Validation failed/, '$someclass->foo(baz => 41)');
-
-TODO: {
-    local $TODO = 'this should croak/warn';
-    lives_and(sub { is $someclass->foo(baz => 44), 'apan:12' }, '$someclass->foo(baz => 12)');
-}
+throws_ok(sub { $someclass->foo(baz => 41) }, qr/Expected named arguments/, '$someclass->foo(baz => 41)');
+throws_ok(sub { $someclass->foo(baz => 44) }, qr/Expected named arguments/, '$someclass->foo(baz => 12)');
 
 
 done_testing;
