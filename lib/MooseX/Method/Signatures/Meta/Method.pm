@@ -398,10 +398,10 @@ sub _build_type_constraint {
 
             my $i = 0;
             for my $param (@{ $positional }) {
-                push @positional_args,
+                push @positional_args, map { $coerce_param->($param, $_) }
                     $#{ $_ } < $i
                         ? (exists $param->{default} ? eval $param->{default} : ())
-                        : $coerce_param->($param, $_->[$i]);
+                        : $_->[$i];
                 $i++;
             }
 
@@ -414,7 +414,7 @@ sub _build_type_constraint {
                     }
 
                     if (exists $spec->{default}) {
-                        $named_args{$key} = eval $spec->{default};
+                        $named_args{$key} = $coerce_param->($spec, eval $spec->{default});
                     }
                 }
 
