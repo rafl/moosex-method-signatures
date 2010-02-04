@@ -406,7 +406,11 @@ sub _build_type_constraint {
             }
 
             if (%named) {
-                my %rest = @{ $_ }[$i .. $#{ $_ }];
+                my @rest = @{ $_ }[$i .. $#{ $_ }];
+                confess "Expected named arguments but didn't find an even-sized list"
+                    unless @rest % 2 == 0;
+                my %rest = @rest;
+
                 while (my ($key, $spec) = each %named) {
                     if (exists $rest{$key}) {
                         $named_args{$key} = $coerce_param->($spec, delete $rest{$key});
