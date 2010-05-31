@@ -10,13 +10,13 @@ use MooseX::Method::Signatures::Meta::Method;
     use metaclass;
 
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(
-        signature    => '($class: Int :$foo, Str :$bar)',
-        package_name => 'Foo',
-        name         => 'bar',
-        body         => sub {
+        sub {
             my ($class, $foo, $bar) = @_;
             return $bar x $foo;
         },
+        signature    => '($class: Int :$foo, Str :$bar)',
+        package_name => 'Foo',
+        name         => 'bar',
     );
     ::isa_ok($method, 'Moose::Meta::Method');
 
