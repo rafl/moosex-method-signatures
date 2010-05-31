@@ -128,16 +128,25 @@ sub strip_traits {
     my $ctx = $self->context;
     my $linestr = $ctx->get_linestr;
 
-    unless (substr($linestr, $ctx->offset, 2) eq 'is') {
+    unless (substr($linestr, $ctx->offset, 2) eq 'is' ||
+            substr($linestr, $ctx->offset, 4) eq 'does') {
         # No 'is' means no traits
         return;
     }
 
     my @traits;
 
-    while (substr($linestr, $ctx->offset, 2) eq 'is') {
-        # Eat the 'is' so we can call strip_names_and_args
-        substr($linestr, $ctx->offset, 2) = '';
+    while (1) {
+        if (substr($linestr, $ctx->offset, 2) eq 'is') {
+            # Eat the 'is' so we can call strip_names_and_args
+            substr($linestr, $ctx->offset, 2) = '';
+        } elsif (substr($linestr, $ctx->offset, 4) eq 'does') {
+            # Eat the 'does' so we can call strip_names_and_args
+            substr($linestr, $ctx->offset, 4) = '';
+        } else {
+            last;
+        }
+
         $ctx->set_linestr($linestr);
         push @traits, @{ $ctx->strip_names_and_args };
         # Get the current linestr so that the loop can look for more 'is'
@@ -145,7 +154,7 @@ sub strip_traits {
         $linestr = $ctx->get_linestr;
     }
 
-    confess "expected traits after 'is', found nothing"
+    confess "expected traits after 'is' or 'does', found nothing"
         unless scalar(@traits);
 
     # Let's check to make sure these traits aren't aliased locally
@@ -189,6 +198,7 @@ sub parser {
     die $err if $err;
 }
 
+my $anon_counter = 0;
 sub _parser {
     my $self = shift;
     my $ctx = $self->context;
@@ -206,6 +216,7 @@ sub _parser {
     my %args = (
       # This might get reset later, but its where we search for exported
       # symbols at compile time
+      name => $name || '__ANON__'.$anon_counter++,
       package_name => $compile_stash,
     );
     $args{ signature        } = qq{($proto)} if defined $proto;
