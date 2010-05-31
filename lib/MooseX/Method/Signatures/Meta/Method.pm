@@ -125,56 +125,13 @@ around name => sub {
     return $ret;
 };
 
-sub _wrapped_body {
-    my ($class, $self, %args) = @_;
 
-    if (exists $args{return_signature}) {
-        return sub {
-            my @args = ${ $self }->validate(\@_);
-            return preserve_context { ${ $self }->actual_body->(@args) }
-                after => sub {
-                    if (defined (my $msg = ${ $self }->_return_type_constraint->validate(\@_))) {
-                        confess $msg;
-                    }
-                };
-        };
-    }
-
-    my $actual_body;
-    return sub {
-        @_ = ${ $self }->validate(\@_);
-        $actual_body ||= ${ $self }->actual_body;
-        goto &{ $actual_body };
-    };
-
-}
-
-sub wrap {
-    my ($class, %args) = @_;
-
-    $args{actual_body} = delete $args{body}
-        if exists $args{body};
-
+around wrap => sub {
+    my $orig = shift;
     my $self;
-    my $to_wrap = $class->_wrapped_body(\$self, %args);
+    my ($class, $code, %args) = @_;
 
-
-    if ($args{traits}) {
-        my @traits = map {
-            Class::MOP::load_class($_->[0]); $_->[0];
-        } @{ $args{traits} };
-
-        my $meta = Moose::Meta::Class->create_anon_class(
-            superclasses => [ $class  ],
-            roles        => [ @traits ],
-            cache        => 1,
-        );
-        $meta->add_method(meta => sub { $meta });
-
-        $class = $meta->name;
-    }
-
-    $self = $class->_new(%args, body => $to_wrap);
+    $self = $class->$orig($code, %args);
 
     # Vivify the type constraints so TC lookups happen before namespace::clean
     # removes them
@@ -182,27 +139,10 @@ sub wrap {
     $self->_return_type_constraint if $self->has_return_signature;
 
     weaken($self->{associated_metaclass})
-        if $self->{associated_metaclass};
+      if $self->{associated_metaclass};
 
     return $self;
-}
-
-sub reify {
-    my ($self, %params) = @_;
-    my $trait_args = delete $params{trait_args};
-
-    my $clone;
-    $clone = $self->meta->clone_object($self,
-        %params, @{ $trait_args || [] },
-        body => $self->_wrapped_body(\$clone,
-            ($self->has_return_signature
-              ? (return_signature => $self->return_signature)
-              : ()),
-        ),
-    );
-
-    return $clone;
-}
+};
 
 sub _build_parsed_signature {
     my ($self) = @_;
