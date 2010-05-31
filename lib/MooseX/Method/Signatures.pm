@@ -198,7 +198,6 @@ sub parser {
     die $err if $err;
 }
 
-my $anon_counter = 0;
 sub _parser {
     my $self = shift;
     my $ctx = $self->context;
@@ -216,7 +215,7 @@ sub _parser {
     my %args = (
       # This might get reset later, but its where we search for exported
       # symbols at compile time
-      name => $name || '__ANON__'.$anon_counter++,
+      name => $name || '__ANON__',
       package_name => $compile_stash,
     );
     $args{ signature        } = qq{($proto)} if defined $proto;
