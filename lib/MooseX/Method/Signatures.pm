@@ -229,7 +229,28 @@ sub _parser {
         $args{prototype_injections} = $self->prototype_injections->{injections};
     }
 
-    my $proto_method = MooseX::Method::Signatures::Meta::Method->wrap(%args);
+    my $meth_class = 'MooseX::Method::Signatures::Meta::Method';
+    if ($args{traits}) {
+        my @traits = ();
+        foreach my $t (@{$args{traits}}) {
+            Class::MOP::load_class($t->[0]);
+            if ($t->[1]) {
+                %args = (%args, eval $t->[1]);
+            };
+            push @traits, $t->[0];
+        }
+        my $meta = Moose::Meta::Class->create_anon_class(
+            superclasses => [ $meth_class  ],
+            roles        => [ @traits ],
+            cache        => 1,
+        );
+        $meth_class = $meta->name;
+        delete $args{traits};
+    }
+
+    my $proto_method;
+    my $code = $self->_wrapped_body(\$proto_method, %args);
+    $proto_method = $meth_class->wrap($code, %args);
 
     my $after_block = ')';
 
@@ -252,12 +273,10 @@ sub _parser {
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name, @args) = @_;
         subname $pkg . "::" .$meth_name, $code;
-        return $proto_method->reify(
-            actual_body  => $code,
-            package_name => $pkg,
-            name         => $meth_name,
-            trait_args   => \@args,
-        );
+        $proto_method->{actual_body} = $code;
+        $proto_method->{package_name} = $pkg;
+        $proto_method->{name} = $meth_name;
+        return $proto_method;
     };
 
     if (defined $name) {
@@ -293,6 +312,30 @@ sub _parser {
             return $create_meta_method->(shift, $compile_stash, '__ANON__', @_);
         });
     }
+}
+
+sub _wrapped_body {
+    my ($class, $self, %args) = @_;
+
+    if (exists $args{return_signature}) {
+        return sub {
+            my @args = ${ $self }->validate(\@_);
+            return preserve_context { ${ $self }->actual_body->(@args) }
+                after => sub {
+                    if (defined (my $msg = ${ $self }->_return_type_constraint->validate(\@_))) {
+                        confess $msg;
+                    }
+                };
+        };
+    }
+
+    my $actual_body;
+    return sub {
+        @_ = ${ $self }->validate(\@_);
+        $actual_body ||= ${ $self }->actual_body;
+        goto &{ $actual_body };
+    };
+
 }
 
 sub scope_injector_call {
