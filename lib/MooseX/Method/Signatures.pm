@@ -198,6 +198,7 @@ sub parser {
     die $err if $err;
 }
 
+my $anon_counter = 1;
 sub _parser {
     my $self = shift;
     my $ctx = $self->context;
@@ -215,12 +216,14 @@ sub _parser {
     my %args = (
       # This might get reset later, but its where we search for exported
       # symbols at compile time
-      name => $name || '__ANON__',
       package_name => $compile_stash,
     );
     $args{ signature        } = qq{($proto)} if defined $proto;
     $args{ traits           } = $traits      if $traits;
     $args{ return_signature } = $ret_tc      if defined $ret_tc;
+
+    # Class::MOP::Method requires a name
+    $args{ name             } = $name || '__ANON__'.($anon_counter++).'__';
 
     if ($self->has_prototype_injections) {
         confess('Configured declarator does not match context declarator')
@@ -247,9 +250,7 @@ sub _parser {
         delete $args{traits};
     }
 
-    my $proto_method;
-    my $code = $self->_wrapped_body(\$proto_method, %args);
-    $proto_method = $meth_class->wrap($code, %args);
+    my $proto_method = $meth_class->wrap(sub { }, %args);
 
     my $after_block = ')';
 
@@ -272,10 +273,18 @@ sub _parser {
     my $create_meta_method = sub {
         my ($code, $pkg, $meth_name, @args) = @_;
         subname $pkg . "::" .$meth_name, $code;
-        $proto_method->{actual_body} = $code;
-        $proto_method->{package_name} = $pkg;
-        $proto_method->{name} = $meth_name;
-        return $proto_method;
+
+        # we want to reinitialize with all the args,
+        # so we give the opportunity for traits to wrap the correct
+        # closure.
+        my %other_args = %{$proto_method};
+        delete $other_args{body};
+        delete $other_args{actual_body};
+
+        my $ret = $meth_class->wrap(
+            $code,
+            %other_args, @args
+        );
     };
 
     if (defined $name) {
@@ -311,30 +320,6 @@ sub _parser {
             return $create_meta_method->(shift, $compile_stash, '__ANON__', @_);
         });
     }
-}
-
-sub _wrapped_body {
-    my ($class, $self, %args) = @_;
-
-    if (exists $args{return_signature}) {
-        return sub {
-            my @args = ${ $self }->validate(\@_);
-            return preserve_context { ${ $self }->actual_body->(@args) }
-                after => sub {
-                    if (defined (my $msg = ${ $self }->_return_type_constraint->validate(\@_))) {
-                        confess $msg;
-                    }
-                };
-        };
-    }
-
-    my $actual_body;
-    return sub {
-        @_ = ${ $self }->validate(\@_);
-        $actual_body ||= ${ $self }->actual_body;
-        goto &{ $actual_body };
-    };
-
 }
 
 sub scope_injector_call {

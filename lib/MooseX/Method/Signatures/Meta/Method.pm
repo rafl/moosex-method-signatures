@@ -125,13 +125,37 @@ around name => sub {
     return $ret;
 };
 
+sub _wrapped_body {
+    my ($class, $self, %args) = @_;
+
+    if (exists $args{return_signature}) {
+        return sub {
+            my @args = ${ $self }->validate(\@_);
+            return preserve_context { ${ $self }->actual_body->(@args) }
+                after => sub {
+                    if (defined (my $msg = ${ $self }->_return_type_constraint->validate(\@_))) {
+                        confess $msg;
+                    }
+                };
+        };
+    }
+
+    my $actual_body;
+    return sub {
+        @_ = ${ $self }->validate(\@_);
+        $actual_body ||= ${ $self }->actual_body;
+        goto &{ $actual_body };
+    };
+
+}
 
 around wrap => sub {
     my $orig = shift;
     my $self;
     my ($class, $code, %args) = @_;
 
-    $self = $class->$orig($code, %args);
+    my $wrapped = $class->_wrapped_body(\$self, %args);
+    $self = $class->$orig($wrapped, %args, actual_body => $code);
 
     # Vivify the type constraints so TC lookups happen before namespace::clean
     # removes them
@@ -139,7 +163,7 @@ around wrap => sub {
     $self->_return_type_constraint if $self->has_return_signature;
 
     weaken($self->{associated_metaclass})
-      if $self->{associated_metaclass};
+        if $self->{associated_metaclass};
 
     return $self;
 };
