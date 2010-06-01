@@ -1,5 +1,11 @@
 Version history for MooseX::Method::Signatures
 
+0.31  Thu, 01 Jun 2010 13:47:34 -0300
+  * Add support for "does" as a trait declarator
+  * Compatibilize MXMS::Meta::Method signature with Class::MOP::Method
+    so other traits can apply customizations to the actual body of the
+    method.
+
 0.30  Thu, 04 Feb 2010 02:41:36 +0100
   * Make Any instead of Defined the default type constraint.
   * Add tests for coercing optional named parameters (Cory Watson).
