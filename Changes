@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.33  Thu, 01 Jun 2010 13:47:34 -0300
+  * CatalystX::Declare seems to create a method object without a code
+    reference at all.
+
 0.32  Thu, 01 Jun 2010 13:47:34 -0300
   * Detect usage of old MXMS::Meta::Method API and retro-compatibilize.
 

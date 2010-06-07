@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 6;
+use Test::More tests => 7;
 use Test::Exception;
 
 use MooseX::Method::Signatures::Meta::Method;
@@ -57,4 +57,18 @@ lives_and(sub {
 
 dies_ok(sub {
     Bar->bar(foo => 'moo', bar => 'baz');
+});
+
+
+# CatalystX::Declare seems to create a method without a code at all.
+lives_and(sub {
+    package Bar;
+    use metaclass;
+
+    my $method = MooseX::Method::Signatures::Meta::Method->wrap(
+        signature    => '($class: Int :$foo, Str :$bar)',
+        package_name => __PACKAGE__,
+        name         => 'bar',
+    );
+    ::isa_ok($method, 'Moose::Meta::Method');
 });

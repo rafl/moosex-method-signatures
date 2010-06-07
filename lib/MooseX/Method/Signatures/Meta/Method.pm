@@ -161,7 +161,7 @@ around wrap => sub {
     }
 
     my $wrapped = $class->_wrapped_body(\$self, %args);
-    $self = $class->$orig($wrapped, %args, actual_body => $code);
+    $self = $class->$orig($wrapped, %args, $code ? (actual_body => $code) : ());
 
     # Vivify the type constraints so TC lookups happen before namespace::clean
     # removes them
