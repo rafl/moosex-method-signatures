@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 7;
+use Test::More tests => 8;
 use Test::Exception;
 
 use MooseX::Method::Signatures::Meta::Method;
@@ -71,4 +71,11 @@ lives_and(sub {
         name         => 'bar',
     );
     ::isa_ok($method, 'Moose::Meta::Method');
+
+    # CatalystX::Declare uses reify directly. too bad.
+    my $other = $method->reify
+      ( actual_body => sub { },
+      );
+    ::isa_ok($method, 'Moose::Meta::Method');
+
 });
