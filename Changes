@@ -1,5 +1,8 @@
 Version history for MooseX::Method::Signatures
 
+0.32  Thu, 01 Jun 2010 13:47:34 -0300
+  * Detect usage of old MXMS::Meta::Method API and retro-compatibilize.
+
 0.31  Thu, 01 Jun 2010 13:47:34 -0300
   * Add support for "does" as a trait declarator
   * Compatibilize MXMS::Meta::Method signature with Class::MOP::Method

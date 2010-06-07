@@ -19,7 +19,7 @@ use aliased 'Devel::Declare::Context::Simple', 'ContextSimple';
 
 use namespace::autoclean;
 
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 
 has package => (
     is            => 'ro',
@@ -625,6 +625,8 @@ With contributions from:
 =item Ash Berlin E<lt>ash@cpan.orgE<gt>
 
 =item Cory Watson E<lt>gphat@cpan.orgE<gt>
+
+=item Daniel Ruoso E<lt>daniel@ruoso.comE<gt>
 
 =item Hakim Cassimally E<lt>hakim.cassimally@gmail.comE<gt>
 

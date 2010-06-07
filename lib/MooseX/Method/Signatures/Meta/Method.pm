@@ -152,7 +152,13 @@ sub _wrapped_body {
 around wrap => sub {
     my $orig = shift;
     my $self;
-    my ($class, $code, %args) = @_;
+    my ($class, $code, %args);
+    if (ref $_[1]) {
+        ($class, $code, %args) = @_;
+    } else {
+        ($class, %args) = @_;
+        $code = delete $args{body};
+    }
 
     my $wrapped = $class->_wrapped_body(\$self, %args);
     $self = $class->$orig($wrapped, %args, actual_body => $code);
