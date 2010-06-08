@@ -176,12 +176,16 @@ around wrap => sub {
 
 sub reify {
     my $self = shift;
+    my %args = @_;
 
     my %other_args = %{$self};
     delete $other_args{body};
     delete $other_args{actual_body};
 
-    return $self->meta->name->wrap($self->body, %other_args, @_);
+    my $body = delete $args{body} || delete $args{actual_body} || $self->body;
+    my %final_args = (%other_args, %args);
+
+    return $self->meta->name->wrap($body, %final_args);
 }
 
 sub _build_parsed_signature {

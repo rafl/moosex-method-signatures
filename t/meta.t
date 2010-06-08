@@ -62,20 +62,34 @@ dies_ok(sub {
 
 # CatalystX::Declare seems to create a method without a code at all.
 lives_and(sub {
-    package Bar;
+    package Baz;
     use metaclass;
 
     my $method = MooseX::Method::Signatures::Meta::Method->wrap(
         signature    => '($class: Int :$foo, Str :$bar)',
         package_name => __PACKAGE__,
-        name         => 'bar',
+        name         => 'baz',
     );
     ::isa_ok($method, 'Moose::Meta::Method');
 
     # CatalystX::Declare uses reify directly. too bad.
     my $other = $method->reify
-      ( actual_body => sub { },
+      ( actual_body => sub {
+            my ($self, $foo, $bar) = @_;
+            return $bar x $foo;
+        },
       );
     ::isa_ok($method, 'Moose::Meta::Method');
 
+
+    Baz->meta->add_method(baz => $other);
 });
+
+lives_and(sub {
+    is(Baz->baz(foo => 3, bar => 'baz'), 'bazbazbaz');
+});
+
+dies_ok(sub {
+    Baz->baz(foo => 'moo', bar => 'baz');
+});
+

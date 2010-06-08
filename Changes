@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.34  Tue, 08 Jun 2010 14:00:00 -0300
+  * Provides a version of reify that replaces the original version and
+    now finally CatalystX::Declare and MooseX::MultiMethods work.
+
 0.33  Thu, 01 Jun 2010 13:47:34 -0300
   * CatalystX::Declare seems to create a method object without a code
     reference at all.
