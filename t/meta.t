@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 8;
+use Test::More tests => 10;
 use Test::Exception;
 
 use MooseX::Method::Signatures::Meta::Method;
