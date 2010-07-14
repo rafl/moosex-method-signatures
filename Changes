@@ -1,5 +1,8 @@
 Version history for MooseX::Method::Signatures
 
+0.31
+  * Updated to avoid warnings from Moose 1.09 (Dave Rolsky).
+
 0.30  Thu, 04 Feb 2010 02:41:36 +0100
   * Make Any instead of Defined the default type constraint.
   * Add tests for coercing optional named parameters (Cory Watson).
