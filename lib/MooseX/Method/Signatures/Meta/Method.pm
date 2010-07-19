@@ -231,7 +231,7 @@ sub _param_to_spec {
     if ($param->has_constraints) {
         my $cb = join ' && ', map { "sub {${_}}->(\\\@_)" } $param->constraints;
         my $code = eval "sub {${cb}}";
-        $tc = subtype($tc, $code);
+        $tc = subtype({ as => $tc, where => $code });
     }
 
     my %spec;

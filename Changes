@@ -1,5 +1,7 @@
 Version history for MooseX::Method::Signatures
 
+  * Updated to avoid warnings from Moose 1.09 (Dave Rolsky).
+
 0.34  Tue, 08 Jun 2010 14:00:00 -0300
   * Provides a version of reify that replaces the original version and
     now finally CatalystX::Declare and MooseX::MultiMethods work.
