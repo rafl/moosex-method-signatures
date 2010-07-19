@@ -3,7 +3,7 @@ package MooseX::Method::Signatures::Meta::Method;
 use Moose;
 use Carp qw/cluck/;
 use Context::Preserve;
-use Parse::Method::Signatures;
+use Parse::Method::Signatures 1.003011;
 use Parse::Method::Signatures::TypeConstraint;
 use Scalar::Util qw/weaken/;
 use Moose::Util qw/does_role/;

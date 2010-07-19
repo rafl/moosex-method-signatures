@@ -159,12 +159,12 @@ for my $test (@signatures) {
 __DATA__
 
 {
-    package %s; 
-    use Moose; 
+    package %s;
+    use Moose;
     use MooseX::Method::Signatures;
     use Moose::Util::TypeConstraints;
-    method alpha ( %s ){ 
-        return %s; 
+    method alpha ( %s ){
+        return %s;
     };
 }
 

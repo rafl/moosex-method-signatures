@@ -1,8 +1,8 @@
 package MooseX::Method::Signatures::Types;
 
-use MooseX::Types -declare => [qw/ Injections PrototypeInjections Params /];
+use MooseX::Types 0.19 -declare => [qw/ Injections PrototypeInjections Params /];
 use MooseX::Types::Moose qw/Str ArrayRef/;
-use MooseX::Types::Structured qw/Dict/;
+use MooseX::Types::Structured 0.20 qw/Dict/;
 use Parse::Method::Signatures::Types qw/Param/;
 
 subtype Injections,

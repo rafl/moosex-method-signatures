@@ -2,13 +2,14 @@ use strict;
 use warnings;
 
 package MooseX::Method::Signatures;
+# ABSTRACT: Method declarations with type constraints and no source filter
 
-use Moose;
-use Devel::Declare ();
-use B::Hooks::EndOfScope;
+use Moose 0.89;
+use Devel::Declare 0.005011 ();
+use B::Hooks::EndOfScope 0.07;
 use Moose::Meta::Class;
-use MooseX::LazyRequire;
-use MooseX::Types::Moose qw/Str Bool CodeRef/;
+use MooseX::LazyRequire 0.04;
+use MooseX::Types::Moose 0.19 qw/Str Bool CodeRef/;
 use Text::Balanced qw/extract_quotelike/;
 use MooseX::Method::Signatures::Meta::Method;
 use MooseX::Method::Signatures::Types qw/PrototypeInjections/;
@@ -18,8 +19,6 @@ use Carp;
 use aliased 'Devel::Declare::Context::Simple', 'ContextSimple';
 
 use namespace::autoclean;
-
-our $VERSION = '0.34';
 
 has package => (
     is            => 'ro',
@@ -343,11 +342,6 @@ __PACKAGE__->meta->make_immutable;
 
 1;
 
-__END__
-=head1 NAME
-
-MooseX::Method::Signatures - Method declarations with type constraints and no source filter
-
 =head1 SYNOPSIS
 
     package Foo;
@@ -613,53 +607,5 @@ L<Devel::Declare>
 L<Parse::Method::Signatures>
 
 L<Moose>
-
-=head1 AUTHOR
-
-Florian Ragwitz E<lt>rafl@debian.orgE<gt>
-
-With contributions from:
-
-=over 4
-
-=item Ash Berlin E<lt>ash@cpan.orgE<gt>
-
-=item Cory Watson E<lt>gphat@cpan.orgE<gt>
-
-=item Daniel Ruoso E<lt>daniel@ruoso.comE<gt>
-
-=item Hakim Cassimally E<lt>hakim.cassimally@gmail.comE<gt>
-
-=item Jonathan Scott Duff E<lt>duff@pobox.comE<gt>
-
-=item Justin Hunter E<lt>justin.d.hunter@gmail.comE<gt>
-
-=item Kent Fredric E<lt>kentfredric@gmail.comE<gt>
-
-=item Maik Hentsche E<lt>maik.hentsche@amd.comE<gt>
-
-=item Matt Kraai E<lt>kraai@ftbfs.orgE<gt>
-
-=item Rhesa Rozendaal E<lt>rhesa@cpan.orgE<gt>
-
-=item Ricardo SIGNES E<lt>rjbs@cpan.orgE<gt>
-
-=item Steffen Schwigon E<lt>ss5@renormalist.netE<gt>
-
-=item Yanick Champoux E<lt>yanick@babyl.dyndns.orgE<gt>
-
-=item Nicholas Perez E<lt>nperez@cpan.orgE<gt>
-
-=back
-
-=head1 COPYRIGHT AND LICENSE
-
-Copyright (c) 2008, 2009  Florian Ragwitz
-
-Code based on the tests for L<Devel::Declare>.
-
-Documentation based on L<MooseX::Method> and L<Method::Signatures>.
-
-Licensed under the same terms as Perl itself.
 
 =cut

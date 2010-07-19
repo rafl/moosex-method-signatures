@@ -8,7 +8,7 @@ use lib "$FindBin::Bin/lib";
 
 eval "use InvalidCase01;";
 ok($@, "Got an error");
-like($@, 
+like($@,
      qr/^Global symbol "\$op" requires explicit package name at .*?\bInvalidCase01.pm line 8\b/,
      "Sane error message for syntax error");
 
