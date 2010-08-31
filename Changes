@@ -1,5 +1,9 @@
 Version history for MooseX::Method::Signatures
 
+0.36  Tue, 31 Aug 2010 23:36:19 +0200
+  * Avoid deprecation warnings from new Moose version by depending on
+    MooseX::LazyRequire 0.06 (Jeremy Carman).
+
 0.35  Mon, 19 Jul 2010 05:50:08 +0200
   * Updated to avoid warnings from Moose 1.09 (Dave Rolsky).
   * Switch from Module::Install to Dist::Zilla.
